@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <base target="_top">
+  <style>
+    body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 0; background-color: #f4f4f4; }
+    .email-container { max-width: 600px; margin: 20px auto; padding: 20px; background-color: #ffffff; border: 1px solid #ddd; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+    .header { color: #2c3e50; border-bottom: 2px solid #ecf0f1; padding-bottom: 10px; margin-bottom: 20px; text-align: center; }
+    .content p { margin: 10px 0; }
+    .content strong { color: #555; }
+    .actions { margin-top: 30px; text-align: center; }
+    .button { 
+      display: inline-block;
+      padding: 12px 25px;
+      margin: 5px;
+      border-radius: 5px;
+      text-decoration: none;
+      font-weight: bold;
+      font-size: 16px;
+      transition: background-color 0.3s ease;
+    }
+    .approve { background-color: #28a745; color: white !important; } /* important to override potential link colors */
+    .approve:hover { background-color: #218838; }
+    .reject { background-color: #dc3545; color: white !important; }
+    .reject:hover { background-color: #c82333; }
+    .footer-note { margin-top: 25px; font-size: 0.9em; color: #777; text-align: center; }
+  </style>
+</head>
+<body>
+  <div class="email-container">
+    <h2 class="header">Your Company Leave Request: Action Required</h2>
+
+    <div class="content">
+      <p>Dear Approver,</p>
+      <p>A leave request from <strong><?= name ?></strong> requires your attention for <strong><?= stage ?></strong>.</p>
+      <p><strong>Requester:</strong> <?= name ?></p>
+      <p><strong>Leave Type:</strong> <?= leaveType ?></p>
+      <p><strong>Dates Requested:</strong> <?= startDate ?> to <?= endDate ?></p>
+      <p><strong>Reason Provided:</strong> <?= reason ?></p>
+      <p><strong>Current Stage Requiring Action:</strong> <?= stage ?></p>
+    </div>
+
+    <div class="actions">
+      <p>Please review the details and take action:</p>
+      <a href="<?= approveUrl ?>" class="button approve">Approve Request</a>
+      <a href="<?= rejectUrl ?>" class="button reject">Reject Request</a>
+      <p style="font-size:0.8em; color:#666; margin-top:10px;">(If rejecting, you can add a note by editing the URL before submitting, or reply to this email with reasons.)</p>
+    </div>
+
+    <? if (stage == 'GM Review') { ?>
+      <div class="footer-note">
+        <p><strong>Note:</strong> This decision is on final stage, please double check before submitting.</p>
+      </div>
+    <? } ?>
+  </div>
+</body>
+</html>
