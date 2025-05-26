@@ -53,6 +53,13 @@ function parseDMYDate(dateString) {
 }
 
 function doGet(e) {
+
+  const page = e?.parameter?.page;
+  
+  if (page === 'privacy') {
+    return HtmlService.createHtmlOutputFromFile('Privacy-Policy').setTitle('Privacy Policy');
+  }
+  
   try {
     const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('Requests');
 
