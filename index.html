@@ -163,7 +163,7 @@
 
       // Simulate delay then open form
       setTimeout(() => {
-        window.open("PUT_YOUR_URL_FROM_GOOGLE_APPS_SCRIPT_HERE", "_blank");        
+        window.open("PUT_YOUR_URL_FROM_GOOGLE_APPS_SCRIPT_HERE", "_blank", "noopener,noreferrer");        
         setTimeout(() => {
           document.getElementById('loadingMessage').classList.add('d-none');
         }, 3000);
