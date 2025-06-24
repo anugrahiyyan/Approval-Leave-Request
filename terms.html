@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <!--
+    Creator: Galbatorix
+    Created for ONEderland Leave Request System
+    If you need support, improvements, or bug fixes, please contact the creator.
+
+    Version: 7.17
+    Date: 2025-05-30
+  -->
+  <meta charset="UTF-8">
+  <title>Terms of Service - ONEderland Leave Request</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="icon" sizes="16x16 32x32 48x48" href="https://ticket.satuimpianbersama.com/favicon.ico" type="image/x-icon"/>
+  <style>
+    body {
+      background: transparent;
+    }
+    #bg-video {
+      position: fixed;
+      right: 0;
+      bottom: 0;
+      min-width: 100%;
+      min-height: 100%;
+      object-fit: cover;
+      z-index: -3;
+    }
+    #overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.5); /* Dark overlay */
+      z-index: -2;
+    }
+    #tsparticles {
+      position: fixed;
+      width: 100%;
+      height: 100%;
+      z-index: -1;
+    }
+    .tos-container {
+      max-width: 900px;
+      margin: 50px auto;
+      background: #ffffff;
+      padding: 40px;
+      border-radius: 10px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+  </style>
+</head>
+<body>
+  <video autoplay muted loop playsinline id="bg-video">
+    <source src="bgvideos-leaveform.mp4" type="video/mp4">
+  </video>
+
+  <!-- Overlay and Particles -->
+  <div id="overlay"></div>
+  <div id="tsparticles"></div>
+
+  <!-- Content Here -->
+  <div class="container tos-container">
+    <h1 class="mb-4 text-primary text-center">Terms of Service</h1>
+    <p class="text-dark fw-bold text-end">Effective Date: May 30, 2025</p>
+
+    <p class="lead">Welcome to the ONEderland Leave Request System. Please read these Terms of Service ("Terms") carefully before using this system.</p>
+
+    <h4>1. Purpose</h4>
+    <p>This system is provided by ONEderland Consulting to manage and streamline internal leave requests, approvals, and notifications among employees, supervisors, HR, and management.</p>
+
+    <h4>2. Acceptance of Terms</h4>
+    <p>By submitting a leave request through this system, you agree to comply with these Terms. If you do not agree with any part of the terms, you may not use the system.</p>
+
+    <h4>3. Usage Rules</h4>
+    <ul>
+      <li>Use the form only for genuine leave requests related to company operations.</li>
+      <li>Do not submit falsified or inaccurate information.</li>
+      <li>Do not tamper with approval links or URLs.</li>
+    </ul>
+
+    <h4>4. Data Handling</h4>
+    <p>All data submitted (including personal and leave details) is stored securely and used solely for internal administrative purposes. Only authorized personnel may access it.</p>
+
+    <h4>5. Email Notifications</h4>
+    <p>The system sends notifications to your registered email and to the designated approving parties. By using the system, you consent to receive these emails.</p>
+
+    <h4>6. Liability</h4>
+    <p>ONEderland is not responsible for any delays or miscommunications arising from misuse of the form or incorrect information provided by the user.</p>
+
+    <h4>7. Modification</h4>
+    <p>We may update these Terms at any time. Users will be notified of major changes through internal communications.</p>
+
+    <h4>8. Contact & Support</h4>
+    <p>If you encounter any issues or need help, please contact the system maintainer:</p>
+    <ul>
+      <li><strong>Creator:</strong> Galbatorix</li>
+      <li><strong>Support Email:</strong> iyyan.anugrah@onederland.co.id</li>
+    </ul>
+
+    <hr>
+    <footer class="text-center text-muted">
+      &copy; 2025 ONEderland Enterprise. All rights reserved.
+    </footer>
+    <p class="text-center text-muted">Version 7.17 • Last updated: June 18, 2025</p>
+  </div>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+  <?= include('footer') ?>
+
+  <script src="https://cdn.jsdelivr.net/npm/tsparticles@2/tsparticles.bundle.min.js"></script>
+
+  <script>
+    tsParticles.load("tsparticles", {
+      particles: {
+        number: {
+          value: 90,
+          density: {
+            enable: true,
+            area: 800
+          }
+        },
+        color: {
+          value: "#ffffff"
+        },
+        shape: {
+          type: "circle"
+        },
+        opacity: {
+          value: 0.5
+        },
+        size: {
+          value: 1,
+          random: true
+        },
+        links: {
+          enable: true,
+          distance: 200,
+          color: "#ffffff",
+          opacity: 0.3,
+          width: 1
+        },
+        move: {
+          enable: true,
+          speed: 1,
+          direction: "none",
+          outModes: {
+            default: "out"
+          }
+        }
+      },
+      interactivity: {
+        events: {
+          onHover: {
+            enable: true,
+            mode: "grab"
+          },
+          onClick: {
+            enable: true,
+            mode: "push"
+          },
+          resize: true
+        },
+        modes: {
+          grab: {
+            distance: 280,
+            links: {
+              opacity: 0.5
+            }
+          },
+          push: {
+            quantity: 3
+          },
+          remove: {
+            quantity: 2
+          }
+        }
+      },
+      detectRetina: true
+    });
+  </script>
+
+  <script>
+    document.addEventListener("DOMContentLoaded", function () {
+      const options = {
+        outerStyle: "circle",
+        hoverEffect: "circle-move",
+        hoverItemMove: false,
+        defaultCursor: false,
+        outerWidth: 30,
+        outerHeight: 30
+      };
+      magicMouse(options);
+    });
+  </script>
+</body>
+</html>

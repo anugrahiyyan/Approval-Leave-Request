@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <base target="_top">
+    <title>Reject with Notes</title>
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <style>
+      body {
+        background-color: #f8f9fa;
+        padding: 40px;
+        font-family: Arial, sans-serif;
+      }
+      .card {
+        max-width: 600px;
+        margin: auto;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="card shadow">
+      <div class="card-header bg-danger text-white">
+        <h4>Reject Leave Request with Notes</h4>
+      </div>
+      <div class="card-body">
+        <form id="rejectForm">
+          <div class="mb-3">
+            <label for="note" class="form-label">Rejection Note</label>
+            <textarea class="form-control" id="note" rows="4" required placeholder="Please provide a reason for rejection..."></textarea>
+          </div>
+          <input type="hidden" id="row" value="<?= row ?>" />
+          <input type="hidden" id="stage" value="<?= stage ?>" />
+          <div class="d-flex justify-content-between">
+            <a class="btn btn-secondary" href="https://mail.google.com/">Cancel</a>
+            <button type="submit" class="btn btn-danger">Submit Rejection</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <script>
+      function submitNote() {
+        const note = document.getElementById('note').value;
+        if (!note.trim()) {
+          alert("Please enter a note before submitting.");
+          return;
+        }
+        const row = "<?= row ?>";
+        const stage = "<?= stage ?>";
+        const baseUrl = "<?= ScriptApp.getService().getUrl() ?>";
+        const finalUrl = `${baseUrl}?action=reject&stage=${encodeURIComponent(stage)}&row=${row}&note=${encodeURIComponent(note)}`;
+        window.location.href = finalUrl;
+      }
+    </script>
+  </body>
+</html>

@@ -1,17 +1,29 @@
+/**
+ * Creator: Galbatorix
+ * Script for ONEderland Leave Request System
+ * 
+ * Contact the creator for support, feature requests, or issues.
+ *
+ * Version: 7.17
+ * Date: 2025-05-30
+ */
+
 // Global Emails Configuration
 const CONFIG = {
-  REPORTING_EMAILS: ["reporting.1@yourcompany.com", "reporting.2@yourcompany.com"],
-  GM_EMAIL: "gm.email@yourcompany.com",
-  HR_EMAIL: "hr.email@yourcompany.com",
+  REPORTING_EMAILS: ["xxx@youremail.com", "xxx@youremail.com"], 
+  GM_EMAIL: "xxx@youremail.com",
+  HR_EMAIL: "xxx@youremail.com",
   SPV_MAP: {
-    "Management Division": "management@yourcompany.com",
-    "Finance": "finance@yourcompany.com",
-    "Helper": "helper@yourcompany.com",
-    "HR": "hr.leader@yourcompany.com",
-    "Security Pos": "security.pos@yourcompany.com",
-    "IT": "it.department@yourcompany.com",
-    // You can add your all supervisor and leader here.
-    //Feel free to add them.
+    "Carbon Energy": "xxx@youremail.com",
+    "Education ONE": "xxx@youremail.com",
+    "English Cafe": "xxx@youremail.com",
+    "General Manager": "xxx@youremail.com", 
+    "Neurone Recruitment": "xxx@youremail.com",
+    "ONEderland Consulting": "xxx@youremail.com",
+    "ONEderland Enterprise Finance": "xxx@youremail.com",
+    "ONEderland Enterprise HRGA": "xxx@youremail.com", 
+    "PeraONE Xperience": "xxx@youremail.com", 
+    "SnG OE": "xxx@youremail.com"
   }
 };
 
@@ -42,6 +54,7 @@ const COLUMNS = {
  * @param {string} dateString The date string in "d-m-Y".
  * @return {Date} A JavaScript Date object.
  */
+
 function parseDMYDate(dateString) {
   if (!dateString || typeof dateString !== 'string') return null;
   const parts = dateString.split("-");
@@ -52,11 +65,159 @@ function parseDMYDate(dateString) {
   return null; // Or throw an error, or return an invalid Date
 }
 
+// Helper function to format date objects to string
+function formatDate(dateObj) {
+  if (!dateObj || !(dateObj instanceof Date) || isNaN(dateObj.getTime())) {
+    // If it's already a string (potentially from sheet), return it, or handle error
+    return (typeof dateObj === 'string') ? dateObj : "Invalid Date";
+  }
+  try {
+    return Utilities.formatDate(dateObj, Session.getScriptTimeZone(), "dd-MMM-yyyy");
+  } catch(e) {
+    Logger.log("formatDate error: " + e.toString());
+    // Fallback for environments where Session might not be available or date is weird
+    const d = dateObj.getDate();
+    const m = dateObj.getMonth() + 1;
+    const y = dateObj.getFullYear();
+    return (d < 10 ? '0' : '') + d + '-' + (m < 10 ? '0' : '') + m + '-' + y;
+  }
+}
+
 function doGet(e) {
   const page = e?.parameter?.page;
+  const action = e.parameter.action;
+  const row = parseInt(e.parameter.row, 10);
+  const stage = e.parameter.stage;
+  const note = e.parameter.note;
+
+  // Process the actual rejection with notes here
+  if (action === 'review' && row && stage && note !== undefined) {
+    // return processRejectionWithNote(row, stage, note);  // Enable this must enable to function rejection on line 163
+    const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('Requests');
+    const headers = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0];
+    const COLUMNS = Object.fromEntries(headers.map((h, i) => [h, i + 1]));
+
+    const rowIndex = row;
+    const values = sheet.getRange(rowIndex, 1, 1, sheet.getLastColumn()).getValues()[0];
+
+    const name = values[COLUMNS["Name"] - 1];
+    const department = values[COLUMNS["Department"] - 1];
+    const leaveType = values[COLUMNS["Leave Type"] - 1];
+    const startDate = values[COLUMNS["Start Date"] - 1];
+    const endDate = values[COLUMNS["End Date"] - 1];
+    const requester = values[COLUMNS["Requester Email"] - 1];
+    const reasonText = values[COLUMNS["Reason"] - 1];
+    const currentStage = stage;
+
+    sheet.getRange(rowIndex, COLUMNS["Status"]).setValue('Rejected');
+    sheet.getRange(rowIndex, COLUMNS["Stage"]).setValue('Rejected at ' + currentStage);
+
+    const formattedStartDate = Utilities.formatDate(new Date(startDate), Session.getScriptTimeZone(), "dd-MM-yyyy");
+    const formattedEndDate = Utilities.formatDate(new Date(endDate), Session.getScriptTimeZone(), "dd-MM-yyyy");
+    const leaveDays = Math.ceil((new Date(endDate) - new Date(startDate)) / (1000 * 60 * 60 * 24)) + 1;
+
+    const rejectionHtml = `
+      <div style="font-family: Arial, sans-serif; color: #333;">
+        <h3 style="color: #dc3545;">❌ Leave Request Rejected - ${name}</h3>
+        <p><strong>Requester:</strong> ${name}</p>
+        <p><strong>Department:</strong> ${department}</p>
+        <p><strong>Leave Type:</strong> ${leaveType}</p>
+        <p><strong>Dates:</strong> ${formattedStartDate} to ${formattedEndDate} (${leaveDays} day${leaveDays > 1 ? 's' : ''})</p>
+        <p><strong>Reason:</strong> ${reasonText}</p>
+        <p><strong>Rejected at Stage:</strong> ${currentStage}</p>
+        <p><strong>Note:</strong> ${note}</p>
+        <div style="margin-top: 20px; padding: 10px; background-color: #f8d7da; color: #721c24; border-left: 5px solid #f5c6cb;">
+          <strong>Status:</strong> Rejected
+        </div>
+      </div>
+    `;
+
+    GmailApp.sendEmail({
+      to: requester,
+      subject: `ONEderland Leave/WFH Request Rejected: ${name}`,
+      htmlBody: rejectionHtml,
+      name: "ONEderland Approval System"
+    });
+    const resultTemplate = HtmlService.createTemplateFromFile('result');
+    resultTemplate.status = "Rejected";
+    resultTemplate.message = "Rejection submitted successfully with notes.";
+    resultTemplate.color = "danger";
+    return resultTemplate.evaluate().setTitle("Rejection Submitted");
+  }
+
+  if (action === 'review' && row && stage) {
+    const template = HtmlService.createTemplateFromFile('rejectWithNotes');
+    template.row = row;
+    template.stage = stage;
+    return template.evaluate().setTitle('Reject with Notes');
+  }
+
+
+  // If this function active, do not forget to uncomment the return processRejectionWithNote(row, stage, note); at line 95
+  // And comment all code inside if (action === 'review' && row && stage && note !== undefined) except reject prosses!
+
+  // This function is to use rejection with notes, but not today, so I just need to commented this feature
+  // We are hold this feature b'coz there a bug while using this.
+  // We'll be right back after get some nice salary hahahaha :v, kidding ~~
+
+  // function processRejectionWithNote(rowIndex, stage, note) {
+  //   const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('Requests');
+  //   const headers = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0];
+  //   const COLUMNS = Object.fromEntries(headers.map((h, i) => [h, i + 1]));
+  //   const values = sheet.getRange(rowIndex, 1, 1, sheet.getLastColumn()).getValues()[0];
+
+  //   const name = values[COLUMNS["Name"] - 1];
+  //   const department = values[COLUMNS["Department"] - 1];
+  //   const leaveType = values[COLUMNS["Leave Type"] - 1];
+  //   const startDate = values[COLUMNS["Start Date"] - 1];
+  //   const endDate = values[COLUMNS["End Date"] - 1];
+  //   const requester = values[COLUMNS["Requester Email"] - 1];
+  //   const reasonText = values[COLUMNS["Reason"] - 1];
+
+  //   sheet.getRange(rowIndex, COLUMNS["Status"]).setValue('Rejected');
+  //   sheet.getRange(rowIndex, COLUMNS["Stage"]).setValue('Rejected at ' + stage);
+  //   sheet.getRange(rowIndex, COLUMNS["Note"]).setValue(note);
+
+  //   const formattedStartDate = Utilities.formatDate(new Date(startDate), Session.getScriptTimeZone(), "dd-MM-yyyy");
+  //   const formattedEndDate = Utilities.formatDate(new Date(endDate), Session.getScriptTimeZone(), "dd-MM-yyyy");
+  //   const leaveDays = Math.ceil((new Date(endDate) - new Date(startDate)) / (1000 * 60 * 60 * 24)) + 1;
+
+  //   const rejectionHtml = `
+  //     <div style="font-family: Arial, sans-serif; color: #333;">
+  //       <h3 style="color: #dc3545;">❌ Leave Request Rejected - ${name}</h3>
+  //       <p><strong>Requester:</strong> ${name}</p>
+  //       <p><strong>Department:</strong> ${department}</p>
+  //       <p><strong>Leave Type:</strong> ${leaveType}</p>
+  //       <p><strong>Dates:</strong> ${formattedStartDate} to ${formattedEndDate} (${leaveDays} day${leaveDays > 1 ? 's' : ''})</p>
+  //       <p><strong>Reason:</strong> ${reasonText}</p>
+  //       <p><strong>Rejected at Stage:</strong> ${stage}</p>
+  //       <p><strong>Note:</strong> ${note}</p>
+  //       <div style="margin-top: 20px; padding: 10px; background-color: #f8d7da; color: #721c24; border-left: 5px solid #f5c6cb;">
+  //         <strong>Status:</strong> Rejected
+  //       </div>
+  //     </div>
+  //   `;
+
+  //   GmailApp.sendEmail({
+  //     to: requester,
+  //     subject: `ONEderland Leave Request Rejected: ${name}`,
+  //     htmlBody: rejectionHtml,
+  //     name: "ONEderland Approval System"
+  //   });
+
+  //   const resultTemplate = HtmlService.createTemplateFromFile('result');
+  //   resultTemplate.status = "Rejected";
+  //   resultTemplate.message = "Rejection submitted successfully with notes.";
+  //   resultTemplate.color = "danger";
+  //   return resultTemplate.evaluate().setTitle("Rejection Submitted");
+  // }
   
   if (page === 'privacy') {
-    return HtmlService.createHtmlOutputFromFile('Privacy-Policy').setTitle('Privacy Policy');
+    return HtmlService.createHtmlOutputFromFile('privacy').setTitle('Privacy Policy');
+  }
+
+  if (page === 'terms') {
+    return HtmlService.createHtmlOutputFromFile('terms').setTitle('Terms of Service');
   }
 
   try {
@@ -126,37 +287,95 @@ function doGet(e) {
           sheet.getRange(rowIndex, COLUMNS.STATUS).setValue('Pending'); // Keep pending until final approval
 
           switch(currentStage) {
-            case 'SPV Approval':
-              nextStage = 'HR Review';
-              sheet.getRange(rowIndex, COLUMNS.STAGE).setValue(nextStage);
-              sendApprovalEmail(name, leaveType, startDate, endDate, reasonText, CONFIG.HR_EMAIL, nextStage, rowIndex);
-              break;
-
-            case 'HR Review':
-              // If HR department staff requests leave (even not unpaid), it should go to GM.
-              // If HR member submits for someone else, it follows normal flow.
-              // Assuming 'department' is the requester's department.
-              const needsGM = (leaveType === 'Unpaid Leave') || (department === 'HR');
-              nextStage = needsGM ? 'GM Review' : 'Final';
-              sheet.getRange(rowIndex, COLUMNS.STAGE).setValue(nextStage);
-              
-              if (needsGM) {
-                sendApprovalEmail(name, leaveType, startDate, endDate, reasonText, CONFIG.GM_EMAIL, nextStage, rowIndex);
+            case "SPV Approval":
+              if (leaveType === "Working From Home (WFH)") {
+                // WFH: Employee submitted → SPV → Reporting
+                finalizeRequest(rowIndex, decision, note, name, requester, "Approved by SPV");
               } else {
-                finalizeRequest(rowIndex, decision, note, name, requester, "Approved by HR");
+                nextStage = "HR Review";
+                sheet.getRange(rowIndex, COLUMNS.STAGE).setValue(nextStage);
+                sendApprovalEmail(name, leaveType, startDate, endDate, reasonText, CONFIG.HR_EMAIL, nextStage, rowIndex);
               }
               break;
 
-            case 'GM Review':
-              nextStage = 'Final';
-              sheet.getRange(rowIndex, COLUMNS.STAGE).setValue(nextStage); // Though it's final, setting stage to 'Final' or 'Completed'
-              finalizeRequest(rowIndex, decision, note, name, requester, "Approved by GM");
+            case "HR Review":
+              // Best Use Cases Logic!
+              // | **Submitter** | **Expected Approval Flow**            | **Expected Reject Flow**   | **Acc Flow** | **Reject Flow** |
+              // | ------------- | ------------------------------------- | -------------------------- | ------------ | --------------- |
+              // | Employee      | SPV → HR → Reporting (V)              | Rejected at the stage of   | Done         | Done            |
+              // | SPV           | HR → GM → Reporting (V)               | ~~                         | Done         | Done            |
+              // | HR            | GM → Reporting (V)                    |   ~~                       | Done         | Done            | 
+              // | GM            | HR → Reporting (V)                    |     ~~                     | Done         | Done            |
+              // | Unpaid Leave  | SPV(V) → HR(V) → GM(V) → Reporting (V)|       ~~                   | Done         | Done            | GM Unpaid needs to fix!
+              // | WFH           | Emp -> SPV(V), SPV -> HR(V), HR -> GM(V), GM -> HR(V) |            | Done         | Done            |
+              //
+              //
+              // GM Unpaid need to be fix ASAP == | GM Unpaid --> HR | not |GM Unpaid --> HR --> GM | , kyaaaaaaaaaaaa, mumet ndaseeee cuuookkk. 
+              // Dahlah besok ajaa, capeee
+              //
+              // I don't know maybe this function still have bias on same stage, but whis is work fine.
+              // Maybe for you the next person who saw this code, you can fix this better. Thanks
+              // 
+              // With Great Respect,
+              // Galbatorix
+
+              const allSpvEmails = Object.values(CONFIG.SPV_MAP);
+              const isRequesterSPV = allSpvEmails.includes(requester);
+              const isRequesterHR = requester.toLowerCase() === CONFIG.HR_EMAIL.toLowerCase();
+              // const isRequesterGM = requester.toLowerCase() === CONFIG.GM_EMAIL.toLowerCase();
+              const needsGM = (leaveType === "Unpaid Leave") || isRequesterSPV;
+
+              // if (leaveType === "Unpaid Leave" && isRequesterGM) {
+              //   // If GM submit Unpaid Leave it should be only end in HR Review, do not move to next stage!
+              //   nextStage = "Final";
+              //   sheet.getRange(rowIndex, COLUMNS.STAGE).setValue(nextStage);
+              //   finalizeRequest(rowIndex, decision, note, name, requester, "Approved by HR")
+              // } else {
+              //   finalizeRequest(rowIndex, decision, note, name, requester, "Approved by HR");
+              // }
+
+              // Need to fix GM flow is he/she pick unpaid-leave! GM only need to HR, Not HR --> GM(again LOL)!
+
+              if (leaveType === "Working From Home (WFH)") {
+                if (isRequesterHR) {
+                  // WFH: HR submitted → GM next
+                  nextStage = "GM Review";
+                  sheet.getRange(rowIndex, COLUMNS.STAGE).setValue(nextStage);
+                  sendApprovalEmail(name, leaveType, startDate, endDate, reasonText, CONFIG.GM_EMAIL, nextStage, rowIndex);
+                } else {
+                  // WFH: SPV submitted → HR → Reporting
+                  finalizeRequest(rowIndex, decision, note, name, requester, "Approved by HR");
+                }
+              } else {
+                // Regular flow
+                nextStage = needsGM ? "GM Review" : "Final";
+                sheet.getRange(rowIndex, COLUMNS.STAGE).setValue(nextStage);
+
+                if (needsGM) {
+                  sendApprovalEmail(name, leaveType, startDate, endDate, reasonText, CONFIG.GM_EMAIL, nextStage, rowIndex);
+                } else {
+                  finalizeRequest(rowIndex, decision, note, name, requester, "Approved by HR");
+                }
+              }
               break;
+
+            case "GM Review":
+              //const isRequesterHR = requester === CONFIG.HR_EMAIL;
+              if (leaveType === "Working From Home (WFH)") {
+                // WFH: HR submitted → GM → Reporting
+                finalizeRequest(rowIndex, decision, note, name, requester, "Approved by GM");
+              } else {
+                nextStage = "Final";
+                sheet.getRange(rowIndex, COLUMNS.STAGE).setValue(nextStage); // Though it's final, setting stage to 'Final' or 'Completed'
+                finalizeRequest(rowIndex, decision, note, name, requester, "Approved by GM");
+              }
+              break;
+
             default:
               // Should not happen if flow is correct
-              nextStage = 'Error in Workflow';
-              sheet.getRange(rowIndex, COLUMNS.STAGE).setValue(nextStage);
-              finalizeRequest(rowIndex, "Error", "Workflow error at stage: " + currentStage, name, requester, "Workflow Error");
+              nextStage = "Error in Workflow";
+              sheet.getRange(rowIndex, COLUMNS.STAGE).setValue(nextStage); 
+              finalizeRequest(rowIndex, "Error", "Workflow error at stage: " + stage, name, requester, "Workflow Error");
               break;
           }
         } else { // Action is 'reject'
@@ -170,7 +389,7 @@ function doGet(e) {
 
           const rejectionHtml = `
             <div style="font-family: Arial, sans-serif; color: #333;">
-              <h3 style="color: #dc3545;">❌ Leave Request Rejected - ${name}</h3>
+              <h3 style="color: #dc3545;">❌ Leave/WFH Request Rejected - ${name}</h3>
               <p><strong>Requester:</strong> ${name}</p>
               <p><strong>Department:</strong> ${department}</p>
               <p><strong>Leave Type:</strong> ${leaveType}</p>
@@ -183,19 +402,24 @@ function doGet(e) {
               </div>
             </div>
           `;
-          // Send to requester
+          // Rejection email to requester
           GmailApp.sendEmail(
             requester,
-            `ONEderland Leave Request Rejected: ${name}`,
+            `ONEderland Leave/WFH Request Rejected: ${name}`,
             '',
-            { htmlBody: rejectionHtml }
+            { 
+              htmlBody: rejectionHtml,
+              name: 'ONEderland Approval System'
+            }
           );
-          // Notify reporting team
-          CONFIG.REPORTING_EMAILS.forEach(email => {
-            GmailApp.sendEmail(email, `Leave Request Rejected - ${name}`, '', {
-              htmlBody: rejectionHtml
-            });
-          });
+
+          // Rejection notification to reporting team
+          //CONFIG.REPORTING_EMAILS.forEach(email => {
+          //  GmailApp.sendEmail(email, `Leave Request Rejected - ${name}`, '', {
+          //    htmlBody: rejectionHtml,
+          //    name: 'ONEderland Approval System'
+          //  });
+          //});
           nextStage = 'Final (Rejected)';
         }
     } finally {
@@ -215,8 +439,86 @@ function doGet(e) {
     let errorHtml = '<h1>Oops! Something went wrong.</h1>';
     errorHtml += '<p>We encountered an error while processing your request. This could be due to the request being outdated, already processed, or a temporary issue.</p>';
     errorHtml += '<p>Please try again later or contact support if the problem persists.</p>';
-    errorHtml += '<p><small>Error details (for support): ' + escapeHtml(err.toString()) + '</small></p>';
+    errorHtml += '<h1><small>Error details (for support): ' + escapeHtml(err.toString()) + '</small></h1>';
     return HtmlService.createHtmlOutput(errorHtml).setTitle("Processing Error");
+  }
+}
+
+function submitRequest(name, email, department, leaveType, startDate, endDate, reason) {
+  try {
+    const sheet = SpreadsheetApp.getActive().getSheetByName("Requests");
+    const spvEmail = CONFIG.SPV_MAP[department] || CONFIG.GM_EMAIL; // Default to GM if SPV not found
+    const hrEmail = CONFIG.HR_EMAIL;
+    const gmEmail = CONFIG.GM_EMAIL;
+
+    const firstDate = parseDMYDate(startDate);
+    const lastDate = parseDMYDate(endDate);
+
+    if (!firstDate || !lastDate) {
+      Logger.log("Invalid date format received: " + startDate + ", " + endDate);
+      throw new Error("Invalid date format. Please use DD-MM-YYYY.");
+    }
+
+    if (lastDate < firstDate) {
+      throw new Error("Are you blind or what?<br>Have you make a coffee today?<br>Last day of leave cannot be before the first day.");
+    }
+
+    // Determine if the requester is the SPV of their department
+    // Javascript?? this is Jawascript hahahahaha
+    const ikiEmailnyaSPVngertiOra = (email.toLowerCase() === spvEmail.toLowerCase());
+    const ikiEmailnyaGMngertiOra = (email.toLowerCase() === gmEmail.toLowerCase());
+    const ikiEmailnyaHRngertiOra = (email.toLowerCase() === hrEmail.toLowerCase());
+
+    let stage;
+    let approvalEmail;
+
+    const saumpaniHRprei = ["Annual Leave", "Bereavement Leave", "Career Leave", "Ceremony Leave", "Sick Leave", "Unpaid Leave", "Other", "Working From Home (WFH)"]; // If SPV as a HR(Dyah Retno) submit all leave it must set nextstage to GM!
+
+    if (ikiEmailnyaSPVngertiOra) {
+      // This is case when your HRGA is also the SPV of HRGA, you know what I mean, chiiizzzzz ~xD
+      // So if your HRGA is on different posisition you're not need this
+      // That's mean you gonna change the flow from here
+      if (saumpaniHRprei.includes(leaveType) && ikiEmailnyaHRngertiOra) {
+        stage = "GM Review";
+        approvalEmail = gmEmail;
+      } else {
+        stage = "HR Review";
+        approvalEmail = hrEmail;
+      }
+    } else if (ikiEmailnyaGMngertiOra) {
+      stage = "HR Review";
+      approvalEmail = hrEmail;
+    } else {
+      if (leaveType === "Working From Home (WFH)") {
+        stage = "SPV Approval"; // employee WFH should go to SPV
+        approvalEmail = spvEmail;
+      } else {
+        stage = "SPV Approval";
+        approvalEmail = spvEmail;
+      }
+    }
+
+    // Append the request to the sheet
+    const newRow = sheet.appendRow([
+      new Date(), name, department, leaveType,
+      firstDate, lastDate, reason,
+      "Pending", email, spvEmail, hrEmail, stage,
+      "", "", new Date() // Decision, Note, Decision Date (initially submission timestamp)
+    ]);
+
+    const rowIndex = sheet.getLastRow();
+
+    // Send confirmation to requester
+    sendSubmissionConfirmation(email, name, leaveType, firstDate, lastDate, reason, stage);
+
+    // Send approval request to next stage
+    sendApprovalEmail(name, leaveType, firstDate, lastDate, reason, approvalEmail, stage, rowIndex);
+
+    return "Success";
+
+  } catch (e) {
+    Logger.log("Submit error: " + e.toString() + " Stack: " + e.stack);
+    return e.message || "Submission failed due to a server error. Please try again.";
   }
 }
 
@@ -252,7 +554,7 @@ function finalizeRequest(row, decision, note, name, requesterEmail, finalApprova
 
   const days = (new Date(endDate) - new Date(startDate)) / (1000 * 60 * 60 * 24) + 1;
 
-  // Final Notification to Requester (Styled)
+  // Final Notification to Requester
   const template = HtmlService.createTemplateFromFile('finalNotification');
   template.name = name;
   template.leaveType = leaveType;
@@ -268,22 +570,24 @@ function finalizeRequest(row, decision, note, name, requesterEmail, finalApprova
 
   const htmlBody = template.evaluate().getContent();
 
+  // Final decision email to requester (Approved/Rejected)
   GmailApp.sendEmail(requesterEmail, `ONEderland Leave Request ${decision}: ${name}`, '', {
-    htmlBody: htmlBody
+    htmlBody: htmlBody,
+    name: 'ONEderland Approval System'
   });
 
-  // Notify Reporting Team with Bootstrap-like styled email
+  // Notify Reporting Team
   const department = sheet.getRange(row, COLUMNS.DEPARTMENT).getValue();
   const calendarTitle = `${name} - ${leaveType}`;
   const calendarDescription = `Leave Request\nRequester: ${name}\nDepartment: ${department}\nType: ${leaveType}\nDecision: ${decision}\nNote: ${finalNote}`;
   const calendarLink = generateCalendarLink(calendarTitle, startDate, endDate, calendarDescription);
 
   const formattedStart = Utilities.formatDate(new Date(startDate), Session.getScriptTimeZone(), "dd-MM-yyyy");
-  const formattedEnd = Utilities.formatDate(new Date(endDate), Session.getScriptTimeZone(), "dd-MM-yyyy");
+  const formattedEnd = Utilities.formatDate(new Date(endDate), Session.getScriptTimeZone(), "dd-MM-yyyy");  
 
   const reportingHtml = `
     <div style="font-family: Arial, sans-serif; padding: 20px; background-color: #f8f9fa; color: #212529; border: 1px solid #dee2e6; border-radius: .25rem;">
-      <h3 style="margin-top:0;">Leave Request <span style="color:${decision === 'Approved' ? '#28a745' : '#dc3545'};">${decision}</span> - ${name}</h3>
+      <h3 style="margin-top:0;">Leave/WFH Request <span style="color:${decision === 'Approved' ? '#28a745' : '#dc3545'};">${decision}</span> - ${name}</h3>
       <p><strong>Requester:</strong> ${name}</p>
       <p><strong>Department:</strong> ${department}</p>
       <p><strong>Leave Type:</strong> ${leaveType}</p>
@@ -291,13 +595,17 @@ function finalizeRequest(row, decision, note, name, requesterEmail, finalApprova
       <p><strong>Reason:</strong> ${reason || 'N/A'}</p>
       <p><strong>Note:</strong> ${finalNote}</p>
       <div style="margin-top: 20px;">
-        <a href="${calendarLink}" target="_blank" style="display:inline-block; padding:10px 20px; background-color:#007bff; color:white; text-decoration:none; border-radius:.25rem;">➕ Add to Google Calendar</a>
+        <a href="${calendarLink}" target="_blank" style="display:inline-block; padding:10px 20px; background-color:#007bff; color:white; text-decoration:none; border-radius:.25rem;">➕     Add to Google Calendar</a>
       </div>
     </div>
   `;
 
+  // Final decision email to reporting team
   CONFIG.REPORTING_EMAILS.forEach(email => {
-    GmailApp.sendEmail(email, `Leave Request ${decision} - ${name}`, '', { htmlBody: reportingHtml });
+    GmailApp.sendEmail(email, `Leave/WFH Request ${decision} - ${name}`, '', { 
+      htmlBody: reportingHtml,
+      name: 'ONEderland Approval System'
+    });
   });
 }
 
@@ -313,65 +621,6 @@ function generateCalendarLink(title, startDate, endDate, description) {
   return `https://www.google.com/calendar/render?action=TEMPLATE&text=${calTitle}&dates=${start}/${end}&details=${details}`;
 }
 
-function submitRequest(name, email, department, leaveType, startDate, endDate, reason) {
-  try {
-    const sheet = SpreadsheetApp.getActive().getSheetByName("Requests");
-    const spvEmail = CONFIG.SPV_MAP[department] || CONFIG.GM_EMAIL; // Default to GM if SPV not found
-    const hrEmail = CONFIG.HR_EMAIL;
-    const gmEmail = CONFIG.GM_EMAIL;
-
-    const firstDate = parseDMYDate(startDate);
-    const lastDate = parseDMYDate(endDate);
-
-    if (!firstDate || !lastDate) {
-      Logger.log("Invalid date format received: " + startDate + ", " + endDate);
-      throw new Error("Invalid date format. Please use DD-MM-YYYY.");
-    }
-    if (lastDate < firstDate) {
-      throw new Error("Last day of leave cannot be before the first day.");
-    }
-
-    // Determine if the requester is the SPV of their department
-    const isSPVSubmitting = (email.toLowerCase() === spvEmail.toLowerCase());
-
-    let stage;
-    let approvalEmail;
-
-    if (isSPVSubmitting) {
-      // If SPV is submitting their own request: skip HR, go directly to GM
-      stage = "GM Review";
-      approvalEmail = gmEmail;
-    } else {
-      // Normal flow: non-SPV submits → goes to SPV
-      stage = "SPV Approval";
-      approvalEmail = spvEmail;
-    }
-
-    // Append the request to the sheet
-    const newRow = sheet.appendRow([
-      new Date(), name, department, leaveType,
-      firstDate, lastDate, reason,
-      "Pending", email, spvEmail, hrEmail, stage,
-      "", "", new Date() // Decision, Note, Decision Date (initially submission timestamp)
-    ]);
-
-    const rowIdx = sheet.getLastRow();
-
-    // Send confirmation to requester
-    sendSubmissionConfirmation(email, name, leaveType, firstDate, lastDate, reason, stage);
-
-    // Send approval request to next stage
-    sendApprovalEmail(name, leaveType, firstDate, lastDate, reason, approvalEmail, stage, rowIdx);
-
-    return "Success";
-
-  } catch (e) {
-    Logger.log("Submit error: " + e.toString() + " Stack: " + e.stack);
-    return e.message || "Submission failed due to a server error. Please try again.";
-  }
-}
-
-
 function sendApprovalEmail(name, leaveType, startDate, endDate, reason, approverEmail, stage, row) {
   const baseUrl = ScriptApp.getService().getUrl();
   
@@ -382,16 +631,20 @@ function sendApprovalEmail(name, leaveType, startDate, endDate, reason, approver
   template.endDate = formatDate(endDate);
   template.reason = reason;
   template.stage = stage;
+  template.baseUrl = ScriptApp.getService().getUrl();
+  template.row = row;
   // Note: For rejections, if a detailed note is required, the approver would currently
   // need to manually add it to the URL by replacing the end of '&note='
   // or an intermediary page/prompt system would be needed.
-  template.approveUrl = `${baseUrl}?action=approve&stage=${encodeURIComponent(stage)}&row=${row}&note=ApprovedAt${encodeURIComponent(stage)}`; // Basic approval note
-  template.rejectUrl = `${baseUrl}?action=reject&stage=${encodeURIComponent(stage)}&row=${row}&note=`; // Blank note, expect user to fill if desired
+
+  // Basic approval note & blank note, expect user to fill if desired
+  template.approveUrl = `${baseUrl}?action=approve&stage=${encodeURIComponent(stage)}&row=${row}&note=${encodeURIComponent(`Approved At ${stage}`)}`;
+  template.rejectUrl = `${baseUrl}?action=reject&stage=${encodeURIComponent(stage)}&row=${row}&note=`;
 
   try {
     MailApp.sendEmail({
       to: approverEmail,
-      subject: `[Action Required] Leave Request: ${name} (${stage})`,
+      subject: `[Action Required] Leave/WFH Request: ${name} (${stage})`,
       htmlBody: template.evaluate().getContent(),
       name: "ONEderland Approval System"
     });
@@ -420,29 +673,11 @@ function sendSubmissionConfirmation(email, name, leaveType, startDate, endDate, 
   try {
     MailApp.sendEmail({
       to: email,
-      subject: "ONEderland Leave Request Submission Confirmation",
+      subject: "ONEderland Leave/WFH Request Submission Confirmation",
       htmlBody: htmlBody,
       name: "ONEderland Approval System" 
     });
   } catch (e) {
     Logger.log("Failed to send confirmation email to " + email + ". Error: " + e.toString());
-  }
-}
-
-// Helper function to format date objects to string
-function formatDate(dateObj) {
-  if (!dateObj || !(dateObj instanceof Date) || isNaN(dateObj.getTime())) {
-    // If it's already a string (potentially from sheet), return it, or handle error
-    return (typeof dateObj === 'string') ? dateObj : "Invalid Date";
-  }
-  try {
-    return Utilities.formatDate(dateObj, Session.getScriptTimeZone(), "dd-MMM-yyyy");
-  } catch(e) {
-    Logger.log("formatDate error: " + e.toString());
-    // Fallback for environments where Session might not be available or date is weird
-    const d = dateObj.getDate();
-    const m = dateObj.getMonth() + 1;
-    const y = dateObj.getFullYear();
-    return (d < 10 ? '0' : '') + d + '-' + (m < 10 ? '0' : '') + m + '-' + y;
   }
 }

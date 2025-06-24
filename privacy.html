@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <!--
+    Creator: Galbatorix
+    Created for ONEderland Leave Request System
+    If you need support, improvements, or bug fixes, please contact the creator.
+
+    Version: 7.17
+    Date: 2025-05-30
+  -->
+  <meta charset="UTF-8">
+  <title>Privacy Policy - ONEderland Leave Request</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="icon" sizes="16x16 32x32 48x48" href="https://ticket.satuimpianbersama.com/favicon.ico" type="image/x-icon"/>
+  <style>
+    body {
+      background: transparent;
+    }
+    #bg-video {
+      position: fixed;
+      right: 0;
+      bottom: 0;
+      min-width: 100%;
+      min-height: 100%;
+      object-fit: cover;
+      z-index: -3;
+    }
+    #overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.5); /* Dark overlay */
+      z-index: -2;
+    }
+    #tsparticles {
+      position: fixed;
+      width: 100%;
+      height: 100%;
+      z-index: -1;
+    }
+    .privacy-container {
+      max-width: 900px;
+      margin: 50px auto;
+      background-color: #fff;
+      padding: 40px;
+      border-radius: 10px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+  </style>
+</head>
+<body>
+  <video autoplay muted loop playsinline id="bg-video">
+    <source src="bgvideos-leaveform.mp4" type="video/mp4">
+  </video>
+
+  <!-- Overlay and Particles -->
+  <div id="overlay"></div>
+  <div id="tsparticles"></div>
+
+  <!-- Content Here -->
+  <div class="container privacy-container">
+    <h1 class="text-primary text-center mb-3">Privacy Policy</h1>
+    <p class="text-dark fw-bold text-end">Effective Date: May 30, 2025</p>
+
+    <h4>1. Overview</h4>
+    <p>This Leave Request Web Application is developed using Google Apps Script and integrated with Google Sheets. It operates entirely within your Google Workspace domain or your organization's approved environment.</p>
+
+    <h4>2. Information We Collect</h4>
+    <p>The application only stores information entered by users in the leave request form, including:</p>
+    <ul>
+      <li>Full Name</li>
+      <li>Department</li>
+      <li>Email Address</li>
+      <li>Leave Dates</li>
+      <li>Leave Type & Reason</li>
+    </ul>
+
+    <h4>3. How We Use Your Information</h4>
+    <p>The information is used solely for processing and managing leave requests within your organization. It is not shared with any third-party service outside of Google Workspace.</p>
+
+    <h4>4. Data Security</h4>
+    <p>All form data is stored securely in a Google Sheet accessible only to authorized users. Email addresses and leave details are used exclusively for internal communication and tracking purposes.</p>
+
+    <h4>5. No Third-Party Access</h4>
+    <p>This application does not integrate with or send data to any third-party service outside of Google’s own infrastructure.</p>
+
+    <h4>6. Contact</h4>
+    <p>If you have any questions about this Privacy Policy, please contact internal administrator or HR department.</p>
+
+    <hr>
+    <footer class="text-center text-muted">
+      &copy; 2025 ONEderland Enterprise. All rights reserved.
+    </footer>
+    <p class="text-center text-muted">Version 7.17 • Last updated: June 18, 2025</p>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/tsparticles@2/tsparticles.bundle.min.js"></script>
+
+  <script>
+    tsParticles.load("tsparticles", {
+      particles: {
+        number: {
+          value: 90,
+          density: {
+            enable: true,
+            area: 800
+          }
+        },
+        color: {
+          value: "#ffffff"
+        },
+        shape: {
+          type: "circle"
+        },
+        opacity: {
+          value: 0.5
+        },
+        size: {
+          value: 1,
+          random: true
+        },
+        links: {
+          enable: true,
+          distance: 200,
+          color: "#ffffff",
+          opacity: 0.3,
+          width: 1
+        },
+        move: {
+          enable: true,
+          speed: 1,
+          direction: "none",
+          outModes: {
+            default: "out"
+          }
+        }
+      },
+      interactivity: {
+        events: {
+          onHover: {
+            enable: true,
+            mode: "grab"
+          },
+          onClick: {
+            enable: true,
+            mode: "push"
+          },
+          resize: true
+        },
+        modes: {
+          grab: {
+            distance: 280,
+            links: {
+              opacity: 0.5
+            }
+          },
+          push: {
+            quantity: 3
+          },
+          remove: {
+            quantity: 2
+          }
+        }
+      },
+      detectRetina: true
+    });
+  </script>
+
+  <script>
+    document.addEventListener("DOMContentLoaded", function () {
+      const options = {
+        outerStyle: "circle",
+        hoverEffect: "circle-move",
+        hoverItemMove: false,
+        defaultCursor: false,
+        outerWidth: 30,
+        outerHeight: 30
+      };
+      magicMouse(options);
+    });
+  </script>
+</body>
+</html>

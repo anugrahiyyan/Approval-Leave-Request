@@ -6,13 +6,12 @@ A fully automated **Google Apps Script-based Leave Request System** with multi-s
 
 ## ✨ Features
 
-- 📝 Google Form frontend with enhanced UX (date pickers, success animations, modal feedback)
+- 📝 Google Form frontend with enhanced UX
 - 📆 Integration with Google Calendar (Add to calendar for reporting team)
 - 🔄 Multi-stage approval workflow: **SPV → HR → GM (optional)**
 - 📧 Dynamic email notifications with styled Bootstrap-based HTML templates
 - 📨 Final decision notifications sent to requester and reporting team
 - 📊 Google Sheet-powered backend for easy tracking and management
-- 🔄 Easily customizable and extendable
 
 ---
 

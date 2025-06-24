@@ -1,12 +1,22 @@
 <!DOCTYPE html>
 <html>
 <head>
+  <!--
+    Creator: Galbatorix
+    Created for ONEderland Leave Request System
+    If you need support, improvements, or bug fixes, please contact the creator.
+
+    Version: 7.17
+    Date: 2025-05-30
+  -->
   <base target="_top">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="icon" sizes="16x16 32x32 48x48" href="https://ticket.satuimpianbersama.com/favicon.ico" type="image/x-icon"/>
   <style>
     body {
-      background-color: #f8f9fa;
       padding: 2rem;
     }
     .form-container {
@@ -17,39 +27,79 @@
       border-radius: 12px;
       box-shadow: 0 0 10px rgba(0,0,0,0.1);
     }
-    .fireworks {
+    #bg-video {
+      position: fixed;
+      right: 0;
+      bottom: 0;
+      min-width: 100%;
+      min-height: 100%;
+      object-fit: cover;
+      z-index: -3;
+    }
+    #overlay {
       position: fixed;
       top: 0;
       left: 0;
-      width: 100vw;
-      height: 100vh;
-      z-index: 9999;
-      pointer-events: none;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.5); /* Dark overlay */
+      z-index: -2;
+    }
+    #tsparticles {
+      position: fixed;
+      width: 100%;
+      height: 100%;
+      z-index: -1;
+    }
+    .footer-overlay {
+      background-color: rgba(0, 0, 0, 0.6); /* semi-transparent dark background */
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
     }
   </style>
 </head>
 <body>
+  <video autoplay muted loop playsinline id="bg-video">
+    <source src="https://leaveform.satuimpianbersama.com/bgvideos-leaveform.mp4" type="video/mp4">
+  </video>
+
+  <div id="overlay"></div>
+  <div id="tsparticles"></div>
+
+  <div class="text-center mb-4">
+    <img
+      src="http://ticket.satuimpianbersama.com/assets/website/340-X-65-px.png"
+      alt="Logo"
+      width="280"
+      class="img-fluid"
+    />
+  </div>
   <div class="form-container">
-    <h2 class="mb-4 text-center">Your Company Leave Request Form</h2>
+    <h3 class=" text-center mb-4">ONEderland Leave/WFH Request Form</h3>
     <form id="leaveForm">
       <div class="mb-3">
         <label for="name" class="form-label">Full Name</label>
-        <input type="text" id="name" class="form-control" required>
+        <input type="text" id="name" placeholder="Your Name" class="form-control" required>
       </div>
 
       <div class="mb-3">
         <label for="email" class="form-label">Your Email</label>
-        <input type="email" id="email" class="form-control" required>
+        <input type="email" id="email" placeholder="youremailname@onederland.com" class="form-control" required>
       </div>
 
       <div class="mb-3">
         <label for="department" class="form-label">Department</label>
         <select id="department" class="form-select" required>
           <option value="">-- Select --</option>
-          <option>Your Company Enterprise</option>
-          <option>Finance</option>
-          <option>HR</option>
-          <!-- You can add your division here-->
+          <option>Carbon Energy</option>
+          <option>Education ONE</option>
+          <option>English Cafe</option>
+          <option>General Manager</option>
+          <option>Neurone Recruitment</option>
+          <option>ONEderland Consulting</option>
+          <option>ONEderland Enterprise Finance</option>
+          <option>ONEderland Enterprise HRGA</option>
+          <option>PeraONE Xperience</option>
+          <option>SnG OE</option>
         </select>
       </div>
 
@@ -58,26 +108,31 @@
         <select id="leaveType" class="form-select" required>
           <option value="">-- Select --</option>
           <option>Annual Leave</option>
+          <option>Bereavement Leave</option>
+          <option>Career Leave</option>
+          <option>Ceremony Leave</option>
           <option>Sick Leave</option>
           <option>Unpaid Leave</option>
-          <option>Emergency Leave</option>
-          <!-- You can add your leave type here-->
+          <option>Working From Home (WFH)</option>
+          <option>Other</option>
         </select>
       </div>
 
-      <div class="mb-3">
-        <label for="firstDay" class="form-label">First Day</label>
-        <input type="text" id="firstDay" class="form-control" required>
-      </div>
-
-      <div class="mb-3">
-        <label for="lastDay" class="form-label">Last Day</label>
-        <input type="text" id="lastDay" class="form-control" required>
+      <div class="row mb-3">
+        <div class="col-md-6">
+          <label for="firstDay" class="form-label">First Day</label>
+          <input type="text" id="firstDay" class="form-control" required>
+        </div>
+        
+        <div class="col-md-6">
+          <label for="lastDay" class="form-label">Last Day</label>
+          <input type="text" id="lastDay" class="form-control" required>
+        </div>
       </div>
 
       <div class="mb-3">
         <label for="reason" class="form-label">Reason</label>
-        <textarea id="reason" class="form-control" rows="3" required></textarea>
+        <textarea id="reason" placeholder="You can write your message here"class="form-control" rows="3" required oninput="this.style.height = ''; this.style.height = this.scrollHeight + 'px'"></textarea>
       </div>
 
       <div class="d-grid">
@@ -85,8 +140,6 @@
       </div>
     </form>
   </div>
-
-  <div id="fireworks" class="fireworks" style="display: none;"></div>
   
   <!-- Loading Spinner -->
   <div id="loadingScreen" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(255,255,255,0.8); z-index:9999; text-align:center; padding-top:200px;">
@@ -106,56 +159,113 @@
         <div class="modal-body" id="resultModalBody">
           <!-- This will be filled dynamically -->
         </div>
-        <div class="modal-footer">
-          <button type="button" class="btn btn-primary" data-bs-dismiss="modal">OK</button>
+        <div class="modal-footer" id="resultModalFooter">
+          <button type="button" class="btn btn-primary" id="closeModalBtn" data-bs-dismiss="modal">OK</button>
         </div>
       </div>
     </div>
   </div>
 
+  <!-- footer.html -->
+  <div class="container mt-5 text-center">
+    <hr class="border-light">
+    <footer class="footer-overlay text-light small py-3 px-4 rounded-3 mx-auto" style="max-width: 600px;">
+      <p class="mb-1">© ONEderland Enterprise <span id="footerYear"></span>. All rights reserved.</p>
+      <p>
+        <a href="https://leaveform.satuimpianbersama.com/privacy.html" target="_blank" class="text-light text-decoration-underline">Privacy Policy</a> |
+        <a href="https://leaveform.satuimpianbersama.com/terms.html" target="_blank" class="text-light text-decoration-underline">Terms of Service</a>
+      </p>
+    </footer>
+  </div>
+
+  <script>document.getElementById("footerYear").textContent = new Date().getFullYear();</script>
   <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
-  <script src="https://cdn.jsdelivr.net/npm/fireworks-js@2.9.2/dist/fireworks.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/tsparticles@2/tsparticles.bundle.min.js"></script>
 
   <script>
-    flatpickr("#firstDay", { dateFormat: "d-m-Y" });
-    flatpickr("#lastDay", { dateFormat: "d-m-Y" });
+    tsParticles.load("tsparticles", {
+      particles: {
+        number: {
+          value: 90,
+          density: {
+            enable: true,
+            area: 800
+          }
+        },
+        color: {
+          value: "#ffffff"
+        },
+        shape: {
+          type: "circle"
+        },
+        opacity: {
+          value: 0.5
+        },
+        size: {
+          value: 1,
+          random: true
+        },
+        links: {
+          enable: true,
+          distance: 200,
+          color: "#ffffff",
+          opacity: 0.3,
+          width: 1
+        },
+        move: {
+          enable: true,
+          speed: 1,
+          direction: "none",
+          outModes: {
+            default: "out"
+          }
+        }
+      },
+      interactivity: {
+        events: {
+          onHover: {
+            enable: true,
+            mode: "grab"
+          },
+          onClick: {
+            enable: true,
+            mode: "push"
+          },
+          resize: true
+        },
+        modes: {
+          grab: {
+            distance: 280,
+            links: {
+              opacity: 0.5
+            }
+          },
+          push: {
+            quantity: 3
+          },
+          remove: {
+            quantity: 2
+          }
+        }
+      },
+      detectRetina: true
+    });
+  </script>
+
+  <script>
+    flatpickr("#firstDay", {
+      dateFormat: "d-m-Y", // still stores as 25-05-2025
+      altInput: true,
+      altFormat: "F j, Y" // displays as May 25, 2025
+    });
+
+    flatpickr("#lastDay", {
+      dateFormat: "d-m-Y",
+      altInput: true,
+      altFormat: "F j, Y"
+    });
 
     let isSuccess = false;
-
-    function triggerFireworks() {
-      const fwContainer = document.getElementById("fireworks");
-      fwContainer.style.display = "block";
-      while (fwContainer.firstChild) fwContainer.removeChild(fwContainer.firstChild);
-      const canvas = document.createElement("canvas");
-      canvas.style.width = "100%";
-      canvas.style.height = "100%";
-      fwContainer.appendChild(canvas);
-
-      const fireworks = new Fireworks.default(canvas, {
-        autoresize: true,
-        opacity: 0.5,
-        acceleration: 1.05,
-        friction: 0.97,
-        gravity: 1.5,
-        particles: 80,
-        traceLength: 3,
-        traceSpeed: 10,
-        explosion: 5,
-        intensity: 20,
-        flickering: 50,
-        lineStyle: 'round',
-        hue: { min: 0, max: 360 },
-        delay: { min: 15, max: 30 },
-        rocketsPoint: { min: 50, max: 50 },
-      });
-
-      fireworks.start();
-      setTimeout(() => {
-        fireworks.stop();
-        fwContainer.style.display = "none";
-        if (fwContainer.contains(canvas)) fwContainer.removeChild(canvas);
-      }, 5000);
-    }
 
     document.getElementById("leaveForm").addEventListener("submit", function (e) {
       e.preventDefault();
@@ -186,22 +296,60 @@
       google.script.run
         .withSuccessHandler((result) => {
           loadingScreen.style.display = "none";
-          if (result === "Success") {
-            resultBody.innerHTML = `<div class="alert alert-success"><strong>Success!</strong> Your leave request has been submitted.</div>`;
-            resultModal.show();
-            triggerFireworks();
-            submitBtn.innerText = "Success 🎉";
-            isSuccess = true;
-          } else {
-            resultBody.innerHTML = `<div class="alert alert-danger"><strong>Error:</strong> ${result}</div>`;
-            resultModal.show();
-            submitBtn.disabled = false;
-            submitBtn.innerText = "Submit Request";
-          }
+            if (result === "Success") {
+              resultBody.innerHTML = `<div class="alert alert-success"><strong>Success!</strong> Your leave request has been submitted.</div>`;
+
+              const modalFooter = document.getElementById("resultModalFooter");
+              modalFooter.innerHTML = `
+                <button type="button" class="btn btn-outline-info" id="newFormBtn">Make a New Request</button>
+                <button type="button" class="btn btn-outline-danger" id="closeTabBtn">Close This Tab</button>
+              `;
+
+              resultModal.show();
+              submitBtn.innerText = "Success 🎉";
+              isSuccess = true;
+
+              // Button actions
+              setTimeout(() => {
+                document.getElementById("newFormBtn").addEventListener("click", () => {
+                  document.getElementById("leaveForm").reset();
+                  submitBtn.disabled = false;
+                  submitBtn.innerText = "Submit Request";
+                  resultModal.hide();
+                });
+
+                document.getElementById("closeTabBtn").addEventListener("click", () => {
+                  resultBody.innerHTML = `<div class="alert alert-info">Thank you. This tab will close shortly...</div>`;
+                  modalFooter.innerHTML = '';
+
+                  setTimeout(() => {
+                    // Attempt to close the window
+                    window.close();
+
+                    // If not closed after 1.5s, show fallback message
+                    setTimeout(() => {
+                      if (!window.closed) {
+                        resultBody.innerHTML = `
+                          <div class="alert alert-warning">
+                            <strong>Notice:</strong> Your browser prevented this tab from closing automatically.<br>
+                            You can safely close this tab now.
+                          </div>
+                        `;
+                      }
+                    }, 1500);
+                  }, 1000);
+                });
+                }, 100); // slight delay to ensure elements are ready
+              } else {
+                resultBody.innerHTML = `<div class="alert alert-danger"><strong>Error:</strong> ${result}</div>`;
+                resultModal.show();
+                submitBtn.disabled = false;
+                submitBtn.innerText = "Submit Request";
+                }
         })
         .withFailureHandler((error) => {
           loadingScreen.style.display = "none";
-          resultBody.innerHTML = `<div class="alert alert-danger"><strong>Submission Failed:</strong> Please try again later.</div>`;
+          resultBody.innerHTML = `<div class="alert alert-danger"><strong>Submission Failed:</strong> Please try again later or refresh this page.</div>`;
           resultModal.show();
           submitBtn.disabled = false;
           submitBtn.innerText = "Submit Request";
