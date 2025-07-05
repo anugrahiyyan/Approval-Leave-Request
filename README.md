@@ -35,7 +35,7 @@ A fully automated **Google Apps Script-based Leave Request System** with multi-s
 Follow the steps below to set everything up:
 
 1. **Create a new Google Sheet**.
-2. **Rename the first sheet** to `Request`  
+2. **Rename the first sheet** to `Requests`  
    > This sheet will serve as the backend for processing requests.
 3. **(Optional)** Create additional sheets for dashboards or analytics — feel free to customize them to fit your needs.
 4. **Open the Apps Script editor**  
