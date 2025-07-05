@@ -13,9 +13,7 @@ A fully automated **Google Apps Script-based Leave Request System** with multi-s
 - 📨 Final decision notifications sent to requester and reporting team
 - 📊 Google Sheet-powered backend for easy tracking and management
 
----
-
-## 📅 Coming Soon
+## ✨ New Feature
 - ✅ Unique one-time tokens per approval link
 - ❌ Prevents multiple approvals or external tampering
 - 🚫 Displays a styled error message if token is missing, invalid, or already used

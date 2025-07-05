@@ -1,7 +1,5 @@
 /**
  * Creator: Galbatorix
- * Script for ONEderland Leave Request System
- * 
  * Contact the creator for support, feature requests, or issues.
  *
  * Version: 7.17
@@ -10,20 +8,12 @@
 
 // Global Emails Configuration
 const CONFIG = {
-  REPORTING_EMAILS: ["xxx@youremail.com", "xxx@youremail.com"], 
-  GM_EMAIL: "xxx@youremail.com",
-  HR_EMAIL: "xxx@youremail.com",
+  REPORTING_EMAILS: ["reporint1@email.com", "reporting2@email.com"], 
+  GM_EMAIL: "your_gm@email.com",
+  HR_EMAIL: "your_hr@email.com",
   SPV_MAP: {
-    "Carbon Energy": "xxx@youremail.com",
-    "Education ONE": "xxx@youremail.com",
-    "English Cafe": "xxx@youremail.com",
-    "General Manager": "xxx@youremail.com", 
-    "Neurone Recruitment": "xxx@youremail.com",
-    "ONEderland Consulting": "xxx@youremail.com",
-    "ONEderland Enterprise Finance": "xxx@youremail.com",
-    "ONEderland Enterprise HRGA": "xxx@youremail.com", 
-    "PeraONE Xperience": "xxx@youremail.com", 
-    "SnG OE": "xxx@youremail.com"
+    "Marketing": "your_marketing@email.com",
+    "Finance": "your_finance@email.com"
   }
 };
 
@@ -40,13 +30,17 @@ const COLUMNS = {
   REQUESTER_EMAIL: 9,
   SPV_EMAIL: 10,
   HR_EMAIL: 11,
-  STAGE: 12,
-  DECISION: 13,
-  NOTE: 14,
-  DECISION_DATE: 15,
-  SPV_DECISION: 16,
-  HR_DECISION: 17,
-  GM_DECISION: 18
+  GM_EMAIL: 12,
+  STAGE: 13,
+  DECISION: 14,
+  NOTE: 15,
+  DECISION_DATE: 16,
+  SPV_DECISION: 17,
+  HR_DECISION: 18,
+  GM_DECISION: 19,
+  SPV_TOKEN: 20,
+  HR_TOKEN: 21,
+  GM_TOKEN: 22
 };
 
 /**
@@ -81,6 +75,36 @@ function formatDate(dateObj) {
     const y = dateObj.getFullYear();
     return (d < 10 ? '0' : '') + d + '-' + (m < 10 ? '0' : '') + m + '-' + y;
   }
+}
+
+function generateRandomToken(length = 8) {
+  const chars = 'abcdefghijklmnopqrstuvwxyz1234567890~<>!@#$%^&*';
+  let token = '';
+  for (let i = 0; i < length; i++) {
+    token += chars[Math.floor(Math.random() * chars.length)];
+  }
+  return token;
+}
+
+function showErrorTokenPage(title, message) {
+  const html = `
+    <html>
+      <head>
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+      </head>
+      <body class="bg-light d-flex align-items-center justify-content-center vh-100">
+        <div class="card shadow-lg" style="max-width: 500px;">
+          <div class="card-body text-center">
+            <h3 class="text-danger mb-3">⚠️ ${title}</h3>
+            <p class="text-muted">${message}</p>
+            <hr>
+            <a href="${ScriptApp.getService().getUrl()}" class="btn btn-primary mt-3">Return to Form</a>
+          </div>
+        </div>
+      </body>
+    </html>
+  `;
+  return HtmlService.createHtmlOutput(html).setTitle(title);
 }
 
 function doGet(e) {
@@ -134,9 +158,9 @@ function doGet(e) {
 
     GmailApp.sendEmail({
       to: requester,
-      subject: `ONEderland Leave/WFH Request Rejected: ${name}`,
+      subject: `Your Company Name Leave/WFH Request Rejected: ${name}`,
       htmlBody: rejectionHtml,
-      name: "ONEderland Approval System"
+      name: "Your Company Name Approval System"
     });
     const resultTemplate = HtmlService.createTemplateFromFile('result');
     resultTemplate.status = "Rejected";
@@ -200,9 +224,9 @@ function doGet(e) {
 
   //   GmailApp.sendEmail({
   //     to: requester,
-  //     subject: `ONEderland Leave Request Rejected: ${name}`,
+  //     subject: `Your Company Name Leave Request Rejected: ${name}`,
   //     htmlBody: rejectionHtml,
-  //     name: "ONEderland Approval System"
+  //     name: "Your Company Name Approval System"
   //   });
 
   //   const resultTemplate = HtmlService.createTemplateFromFile('result');
@@ -270,6 +294,72 @@ function doGet(e) {
             }
         }
 
+        // Get the stageToken map
+        const stageTokenColumnMap = {
+          "SPV Approval": COLUMNS.SPV_TOKEN,
+          "HR Review": COLUMNS.HR_TOKEN,
+          "GM Review": COLUMNS.GM_TOKEN
+        };
+
+        // Get the `data` row and extract currentStage BEFORE using it
+        const data = sheet.getRange(rowIndex, 1, 1, sheet.getLastColumn()).getValues()[0];
+
+        // Now it's safe to use currentStage to look up token column
+        const tokenColumn = stageTokenColumnMap[currentStage];
+
+        // Get token from link
+        const tokenToUse = e.parameter.token;
+        const stageParam = e.parameter.stage; // spv/hr/gm
+
+        // Validate inputs
+        if (!tokenToUse || !tokenColumn || !stageParam) {
+          return showErrorTokenPage("Unauthorized Access", "Hey Stranger, what are you doing here?");
+        }
+
+        // Normalize stage and validate token
+        const validStage = {
+          spv: COLUMNS.SPV_TOKEN,
+          hr: COLUMNS.HR_TOKEN,
+          gm: COLUMNS.GM_TOKEN
+        }[stageParam.toLowerCase()];
+
+        // Get email of current Google user
+        const currentUserEmail = Session.getActiveUser().getEmail().toLowerCase();
+        const spvEmail = (data[COLUMNS.SPV_EMAIL - 1] || "").toLowerCase();
+        const hrEmail  = (data[COLUMNS.HR_EMAIL - 1] || "").toLowerCase();
+        const gmEmail  = (data[COLUMNS.GM_EMAIL - 1] || "").toLowerCase();
+
+        let expectedApprover = "";
+
+        if (stageParam === "spv") expectedApprover = spvEmail;
+        else if (stageParam === "hr") expectedApprover = hrEmail;
+        else if (stageParam === "gm") expectedApprover = gmEmail;
+        else return showErrorTokenPage("Invalid Stage", "Unknown stage: " + stageParam);
+
+        if (currentUserEmail !== expectedApprover) {
+          return showErrorTokenPage("Unauthorized Approver", `Whoopzz Whoopzz <code>${currentUserEmail}</code>, <br>You're not authorized to approve this request<br>for stage <b>${currentStage}</b>.`);
+        }
+
+        // Check saved token
+        const savedToken = sheet.getRange(rowIndex, tokenColumn).getValue();
+
+        if (validStage !== tokenColumn || savedToken !== tokenToUse || savedToken.endsWith("_used")) {
+          return showErrorTokenPage("Access Denied", "Invalid or expired token. This action link has already been used or broken.");
+        }
+
+        // Block re-approval if already finalized
+        if (["Approved", "Rejected"].includes(currentStatus)) {
+          const html = HtmlService.createTemplateFromFile('result');
+          html.action = currentStatus.toLowerCase();
+          html.stage = currentStage;
+          html.note = `This request was already processed as ${currentStatus}. ` + sheet.getRange(rowIndex, COLUMNS.NOTE).getValue();
+          html.nextStage = "Final";
+          return html.evaluate().setTitle("Request Processed");
+        }
+
+        // Invalidate the token after use
+        sheet.getRange(rowIndex, tokenColumn).setValue(`${tokenToUse}_used`);
+
         name = sheet.getRange(rowIndex, COLUMNS.NAME).getValue();
         department = sheet.getRange(rowIndex, COLUMNS.DEPARTMENT).getValue();
         leaveType = sheet.getRange(rowIndex, COLUMNS.LEAVE_TYPE).getValue();
@@ -289,12 +379,19 @@ function doGet(e) {
           switch(currentStage) {
             case "SPV Approval":
               if (leaveType === "Working From Home (WFH)") {
-                // WFH: Employee submitted → SPV → Reporting
                 finalizeRequest(rowIndex, decision, note, name, requester, "Approved by SPV");
               } else {
                 nextStage = "HR Review";
                 sheet.getRange(rowIndex, COLUMNS.STAGE).setValue(nextStage);
-                sendApprovalEmail(name, leaveType, startDate, endDate, reasonText, CONFIG.HR_EMAIL, nextStage, rowIndex);
+
+                // Generate a new token for HR
+                const hrToken = generateRandomToken();
+
+                // Save token in the sheet in HR_TOKEN column
+                sheet.getRange(rowIndex, COLUMNS.HR_TOKEN).setValue(hrToken);
+
+                // Pass same token to the email function
+                sendApprovalEmail(name, leaveType, startDate, endDate, reasonText, CONFIG.HR_EMAIL, nextStage, rowIndex, hrToken);
               }
               break;
 
@@ -340,8 +437,10 @@ function doGet(e) {
                 if (isRequesterHR) {
                   // WFH: HR submitted → GM next
                   nextStage = "GM Review";
-                  sheet.getRange(rowIndex, COLUMNS.STAGE).setValue(nextStage);
-                  sendApprovalEmail(name, leaveType, startDate, endDate, reasonText, CONFIG.GM_EMAIL, nextStage, rowIndex);
+                    sheet.getRange(rowIndex, COLUMNS.STAGE).setValue(nextStage);
+                    const gmToken = generateRandomToken();
+                    sheet.getRange(rowIndex, COLUMNS.GM_TOKEN).setValue(gmToken);
+                    sendApprovalEmail(name, leaveType, startDate, endDate, reasonText, CONFIG.GM_EMAIL, nextStage, rowIndex, gmToken);
                 } else {
                   // WFH: SPV submitted → HR → Reporting
                   finalizeRequest(rowIndex, decision, note, name, requester, "Approved by HR");
@@ -350,9 +449,11 @@ function doGet(e) {
                 // Regular flow
                 nextStage = needsGM ? "GM Review" : "Final";
                 sheet.getRange(rowIndex, COLUMNS.STAGE).setValue(nextStage);
+                const gmToken = generateRandomToken();
+                sheet.getRange(rowIndex, COLUMNS.GM_TOKEN).setValue(gmToken);
 
                 if (needsGM) {
-                  sendApprovalEmail(name, leaveType, startDate, endDate, reasonText, CONFIG.GM_EMAIL, nextStage, rowIndex);
+                  sendApprovalEmail(name, leaveType, startDate, endDate, reasonText, CONFIG.GM_EMAIL, nextStage, rowIndex, gmToken);
                 } else {
                   finalizeRequest(rowIndex, decision, note, name, requester, "Approved by HR");
                 }
@@ -405,11 +506,11 @@ function doGet(e) {
           // Rejection email to requester
           GmailApp.sendEmail(
             requester,
-            `ONEderland Leave/WFH Request Rejected: ${name}`,
+            `Your Company Name Leave/WFH Request Rejected: ${name}`,
             '',
             { 
               htmlBody: rejectionHtml,
-              name: 'ONEderland Approval System'
+              name: 'Your Company Name Approval System'
             }
           );
 
@@ -417,7 +518,7 @@ function doGet(e) {
           //CONFIG.REPORTING_EMAILS.forEach(email => {
           //  GmailApp.sendEmail(email, `Leave Request Rejected - ${name}`, '', {
           //    htmlBody: rejectionHtml,
-          //    name: 'ONEderland Approval System'
+          //    name: 'Your Company Name Approval System'
           //  });
           //});
           nextStage = 'Final (Rejected)';
@@ -440,6 +541,7 @@ function doGet(e) {
     errorHtml += '<p>We encountered an error while processing your request. This could be due to the request being outdated, already processed, or a temporary issue.</p>';
     errorHtml += '<p>Please try again later or contact support if the problem persists.</p>';
     errorHtml += '<h1><small>Error details (for support): ' + escapeHtml(err.toString()) + '</small></h1>';
+    errorHtml += '<h2><small>Contact Support (for support): Please screenshoot this error and send it to Your Support Name</small></h2>';
     return HtmlService.createHtmlOutput(errorHtml).setTitle("Processing Error");
   }
 }
@@ -498,13 +600,28 @@ function submitRequest(name, email, department, leaveType, startDate, endDate, r
       }
     }
 
+    const spvToken = generateRandomToken();
+    const hrToken = generateRandomToken();
+    const gmToken = generateRandomToken();
+
+    let tokenToUse;
+      if (stage === "SPV Approval") {
+        tokenToUse = spvToken;
+      } else if (stage === "HR Review") {
+        tokenToUse = hrToken;
+      } else if (stage === "GM Review") {
+        tokenToUse = gmToken;
+      }
+
     // Append the request to the sheet
     const newRow = sheet.appendRow([
-      new Date(), name, department, leaveType,
-      firstDate, lastDate, reason,
-      "Pending", email, spvEmail, hrEmail, stage,
-      "", "", new Date() // Decision, Note, Decision Date (initially submission timestamp)
-    ]);
+    new Date(), name, department, leaveType,
+    firstDate, lastDate, reason,
+    "Pending", email, spvEmail, hrEmail, gmEmail, stage,
+    "", "", new Date(), // Decision, Note, Decision Date
+    "", "", "",         // SPV_DECISION, HR_DECISION, GM_DECISION
+    spvToken, hrToken, gmToken
+  ]);
 
     const rowIndex = sheet.getLastRow();
 
@@ -512,7 +629,7 @@ function submitRequest(name, email, department, leaveType, startDate, endDate, r
     sendSubmissionConfirmation(email, name, leaveType, firstDate, lastDate, reason, stage);
 
     // Send approval request to next stage
-    sendApprovalEmail(name, leaveType, firstDate, lastDate, reason, approvalEmail, stage, rowIndex);
+    sendApprovalEmail(name, leaveType, firstDate, lastDate, reason, approvalEmail, stage, rowIndex, tokenToUse);
 
     return "Success";
 
@@ -571,9 +688,9 @@ function finalizeRequest(row, decision, note, name, requesterEmail, finalApprova
   const htmlBody = template.evaluate().getContent();
 
   // Final decision email to requester (Approved/Rejected)
-  GmailApp.sendEmail(requesterEmail, `ONEderland Leave Request ${decision}: ${name}`, '', {
+  GmailApp.sendEmail(requesterEmail, `Your Company Name Leave Request ${decision}: ${name}`, '', {
     htmlBody: htmlBody,
-    name: 'ONEderland Approval System'
+    name: 'Your Company Name Approval System'
   });
 
   // Notify Reporting Team
@@ -604,7 +721,7 @@ function finalizeRequest(row, decision, note, name, requesterEmail, finalApprova
   CONFIG.REPORTING_EMAILS.forEach(email => {
     GmailApp.sendEmail(email, `Leave/WFH Request ${decision} - ${name}`, '', { 
       htmlBody: reportingHtml,
-      name: 'ONEderland Approval System'
+      name: 'Your Company Name Approval System'
     });
   });
 }
@@ -621,35 +738,46 @@ function generateCalendarLink(title, startDate, endDate, description) {
   return `https://www.google.com/calendar/render?action=TEMPLATE&text=${calTitle}&dates=${start}/${end}&details=${details}`;
 }
 
-function sendApprovalEmail(name, leaveType, startDate, endDate, reason, approverEmail, stage, row) {
+function sendApprovalEmail(name, leaveType, startDate, endDate, reason, approverEmail, stage, row, tokenToUse) {
   const baseUrl = ScriptApp.getService().getUrl();
-  
-  const template = HtmlService.createTemplateFromFile("emailtemplate"); // Ensure this is 'emailtemplate' not 'EmailTemplate' if filename is lowercase
+
+  const template = HtmlService.createTemplateFromFile("emailtemplate");
   template.name = name;
   template.leaveType = leaveType;
   template.startDate = formatDate(startDate);
   template.endDate = formatDate(endDate);
   template.reason = reason;
   template.stage = stage;
-  template.baseUrl = ScriptApp.getService().getUrl();
+  template.baseUrl = baseUrl;
   template.row = row;
-  // Note: For rejections, if a detailed note is required, the approver would currently
-  // need to manually add it to the URL by replacing the end of '&note='
-  // or an intermediary page/prompt system would be needed.
 
-  // Basic approval note & blank note, expect user to fill if desired
-  template.approveUrl = `${baseUrl}?action=approve&stage=${encodeURIComponent(stage)}&row=${row}&note=${encodeURIComponent(`Approved At ${stage}`)}`;
-  template.rejectUrl = `${baseUrl}?action=reject&stage=${encodeURIComponent(stage)}&row=${row}&note=`;
+  // 🧠 Extract normalized stage (lowercase) → Used for URL param
+  const shortStage = stage.toLowerCase().includes("spv") ? "spv"
+                   : stage.toLowerCase().includes("hr") ? "hr"
+                   : stage.toLowerCase().includes("gm") ? "gm"
+                   : "unknown"; // fallback
+
+  if (!tokenToUse || shortStage === "unknown") {
+    Logger.log(`❗ Missing token or invalid stage in sendApprovalEmail for stage: ${stage}, row: ${row}`);
+    return;
+  }
+
+  // ✅ Safe & encoded approval/rejection URLs
+  const encodedToken = encodeURIComponent(tokenToUse);
+  const noteText = `Approved at ${stage}`;
+  template.approveUrl = `${baseUrl}?action=approve&stage=${shortStage}&row=${row}&token=${encodedToken}&note=${encodeURIComponent(noteText)}`;
+  template.rejectUrl  = `${baseUrl}?action=reject&stage=${shortStage}&row=${row}&token=${encodedToken}&note=`; // will be filled in by user
 
   try {
     MailApp.sendEmail({
       to: approverEmail,
       subject: `[Action Required] Leave/WFH Request: ${name} (${stage})`,
       htmlBody: template.evaluate().getContent(),
-      name: "ONEderland Approval System"
+      name: "Your Company Name Approval System"
     });
+    Logger.log(`✅ Approval email sent to ${approverEmail} for ${name} at ${stage}`);
   } catch (e) {
-    Logger.log("Failed to send approval email to " + approverEmail + " for row " + row + ". Error: " + e.toString());
+    Logger.log(`❌ Failed to send approval email to ${approverEmail} for row ${row}. Error: ${e}`);
   }
 }
 
@@ -667,15 +795,15 @@ function sendSubmissionConfirmation(email, name, leaveType, startDate, endDate, 
       </table>
       
       <p>You will receive further email notifications as your request is processed.</p>
-      <p style="color:#7f8c8d;font-size:0.9em;margin-top:20px;">Thank you,<br/>ONEderland Approval System</p>
+      <p style="color:#7f8c8d;font-size:0.9em;margin-top:20px;">Thank you,<br/>Your Company Name Approval System</p>
     </div>
   `;
   try {
     MailApp.sendEmail({
       to: email,
-      subject: "ONEderland Leave/WFH Request Submission Confirmation",
+      subject: "Your Company Name Leave/WFH Request Submission Confirmation",
       htmlBody: htmlBody,
-      name: "ONEderland Approval System" 
+      name: "Your Company Name Approval System" 
     });
   } catch (e) {
     Logger.log("Failed to send confirmation email to " + email + ". Error: " + e.toString());
