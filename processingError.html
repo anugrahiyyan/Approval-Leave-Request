@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <base target="_top">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <title>Processing Error</title>
+    <style>
+        body {
+            background-color: #f8f9fa;
+        }
+
+        .error-container {
+            max-width: 700px;
+            margin: 5% auto;
+            padding: 2rem;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, .15);
+        }
+
+        small {
+            font-family: monospace;
+            color: #555;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="error-container text-center">
+            <h1 class="text-danger mb-4">⚠️ Oops! Something went wrong.</h1>
+            <p class="lead">We encountered an error while processing your request.</p>
+            <p>This may be due to:</p>
+            <ul class="list-group list-group-flush mb-3">
+                <li class="list-group-item">🔄 An outdated or already processed request</li>
+                <li class="list-group-item">🌐 A temporary network issue</li>
+                <li class="list-group-item">⚙️ Internal processing error</li>
+            </ul>
+            <p class="mb-3">Please try again later or contact support if the problem persists.</p>
+            <div class="alert alert-secondary text-start" role="alert">
+                <strong>Error Details:</strong><br>
+                <small>
+                    <?= errorMessage ?><br>
+                    <?= stackLine ?>
+                </small>
+            </div>
+            <p class="text-muted"><strong>Support:</strong> Please screenshot this page and contact <strong>Suma
+                    Antara</strong> or <strong>Iyyan Anugrah.</strong></p>
+        </div>
+    </div>
+</body>
+
+</html>

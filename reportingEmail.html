@@ -1,0 +1,129 @@
+<div style="font-family: Arial, sans-serif; background-color: #ffffff; margin: 0; padding: 0;">
+    <table align="center" width="100%"
+        style="max-width: 650px; margin: auto; border: 1px solid #e0e0e0; border-radius: 10px; box-shadow: 0 1px 6px rgba(0,0,0,0.08); background: #fff;">
+        <tr>
+            <td style="padding: 22px 28px;">
+
+                <!-- Header -->
+                <h2 style="margin: 0 0 15px 0; font-size: 20px; color: #2c3e50; text-align: center;">
+                    Leave / WFH Request:
+                    <span style="color: <?= decision === 'Approved' ? '#28a745' : '#dc3545' ?>;">
+                        <?= decision ?>
+                    </span>
+                </h2>
+
+                <p style="font-size: 14.5px; color: #555; margin-top: 4px; text-align: center;">
+                    Final Notification — Request Complete
+                </p>
+
+                <!-- Table -->
+                <table width="100%" cellpadding="0" cellspacing="0"
+                    style="margin-top: 22px; border-collapse: collapse; font-size: 15px;">
+
+                    <tr>
+                        <td
+                            style="padding:10px; border: 1px solid #e0e0e0; font-weight:bold; background:#f7f7f7; width:160px;">
+                            Form ID</td>
+                        <td style="padding:10px; border: 1px solid #e0e0e0;">
+                            <?= refID ?>
+                        </td>
+                    </tr>
+
+                    <tr>
+                        <td style="padding:10px; border: 1px solid #e0e0e0; font-weight:bold; background:#f7f7f7;">
+                            Requester</td>
+                        <td style="padding:10px; border: 1px solid #e0e0e0;">
+                            <?= name ?>
+                        </td>
+                    </tr>
+
+                    <tr>
+                        <td style="padding:10px; border: 1px solid #e0e0e0; font-weight:bold; background:#f7f7f7;">
+                            Department</td>
+                        <td style="padding:10px; border: 1px solid #e0e0e0;">
+                            <?= department ?>
+                        </td>
+                    </tr>
+
+                    <tr>
+                        <td style="padding:10px; border: 1px solid #e0e0e0; font-weight:bold; background:#f7f7f7;">Leave
+                            Type</td>
+                        <td style="padding:10px; border: 1px solid #e0e0e0;">
+                            <?= leaveType ?>
+                        </td>
+                    </tr>
+
+                    <tr>
+                        <td style="padding:10px; border: 1px solid #e0e0e0; font-weight:bold; background:#f7f7f7;">Dates
+                        </td>
+                        <td style="padding:10px; border: 1px solid #e0e0e0;">
+                            <?= formattedStart ?> →
+                            <?= formattedEnd ?> (
+                            <?= days ?> day
+                            <?= days > 1 ? 's' : '' ?>)
+                        </td>
+                    </tr>
+
+                    <tr>
+                        <td
+                            style="padding:10px; border: 1px solid #e0e0e0; font-weight:bold; background:#f7f7f7; vertical-align: top;">
+                            Reason</td>
+                        <td style="padding:10px; border: 1px solid #e0e0e0;">
+                            <?= reason || 'N/A' ?>
+                        </td>
+                    </tr>
+
+                    <tr>
+                        <td
+                            style="padding:10px; border: 1px solid #e0e0e0; font-weight:bold; background:#f7f7f7; vertical-align: top;">
+                            Note</td>
+                        <td style="padding:10px; border: 1px solid #e0e0e0;">
+                            <?= finalNote || 'N/A' ?>
+                        </td>
+                    </tr>
+
+                    <? if (attachmentUrl) { ?>
+                    <tr>
+                        <td
+                            style="padding:10px; border: 1px solid #e0e0e0; font-weight:bold; background:#f7f7f7; vertical-align: top;">
+                            Attachment</td>
+                        <td style="padding:10px; border: 1px solid #e0e0e0;"><a href="<?= attachmentUrl ?>"
+                                target="_blank">View
+                                Document</a></td>
+                    </tr>
+                    <? } ?>
+
+                    <? if (updatedBalance) { ?>
+                    <tr>
+                        <td style="padding:10px; border: 1px solid #e0e0e0; font-weight:bold; background:#f7f7f7;">
+                            Balance Updates
+                        </td>
+                        <td style="padding:10px; border: 1px solid #e0e0e0;">
+                            <? for (var key in updatedBalance) { ?>
+                            <div>
+                                <?= key.charAt(0).toUpperCase() + key.slice(1) ?> Leave: <strong>
+                                    <?= updatedBalance[key] ?>
+                                </strong>
+                            </div>
+                            <? } ?>
+                        </td>
+                    </tr>
+                    <? } ?>
+
+                </table>
+
+                <!-- Calendar Note -->
+                <p style="margin-top: 20px; font-size: 14px; color: #666;">
+                    ✔️ This request has been automatically added to the company calendar.
+                </p>
+
+                <!-- Footer -->
+                <div style="margin-top: 25px; text-align: center; font-size: 13px; color: #999;">
+                    Thank you for using ONEderland Leave System.
+                    <br>Need help? Contact HR support.
+                </div>
+
+            </td>
+        </tr>
+    </table>
+</div>

@@ -1,0 +1,8 @@
+/*
+  X-Content-Type-Options: nosniff
+  X-Frame-Options: DENY
+  X-XSS-Protection: 1; mode=block
+  Strict-Transport-Security: max-age=63072000; includeSubDomains; preload
+  Content-Security-Policy: default-src 'self' https://cdn.jsdelivr.net; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://static.cloudflareinsights.com; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; img-src 'self' data: https://ticket.satuimpianbersama.com; media-src 'self'; object-src 'none'; base-uri 'self'; connect-src 'self' https://cdn.jsdelivr.net https://cloudflareinsights.com;
+  Referrer-Policy: no-referrer-when-downgrade
+  Permissions-Policy: geolocation=(), microphone=(), camera=(), fullscreen=(self)

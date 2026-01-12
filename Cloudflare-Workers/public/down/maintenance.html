@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Maintenance in Progress</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <script src="https://cdn.jsdelivr.net/npm/tsparticles@2/tsparticles.bundle.min.js"></script>
+  <style>
+    body {
+      background-color: #f8f9fa;
+      height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Segoe UI', sans-serif;
+    }
+
+    .card {
+      border: none;
+      border-radius: 20px;
+      box-shadow: 0 0.75rem 1.5rem rgba(0, 0, 0, .1);
+    }
+
+    .spinner-border {
+      width: 3rem;
+      height: 3rem;
+    }
+
+    #bg-video {
+      position: fixed;
+      right: 0;
+      bottom: 0;
+      min-width: 100%;
+      min-height: 100%;
+      object-fit: cover;
+      z-index: -3;
+    }
+
+    #overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.5);
+      /* Dark overlay */
+      z-index: -2;
+    }
+
+    #tsparticles {
+      position: fixed;
+      width: 100%;
+      height: 100%;
+      z-index: -1;
+    }
+
+    .privacy-container {
+      max-width: 900px;
+      margin: 50px auto;
+      background-color: #fff;
+      padding: 40px;
+      border-radius: 10px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+  </style>
+</head>
+
+<body>
+  <video autoplay muted loop playsinline id="bg-video">
+    <source src="../bgmv/bg_Underground_Cave_1920x1080.mp4" type="video/mp4">
+  </video>
+
+  <!-- Overlay and Particles -->
+  <div id="overlay"></div>
+  <div id="tsparticles"></div>
+  </style>
+  </head>
+
+  <body>
+    <div class="card text-center p-5">
+      <div class="mb-4">
+        <div class="spinner-border text-warning" role="status"></div>
+      </div>
+      <h2 class="text-primary mb-3">We’re Under Maintenance</h2>
+      <p class="lead text-secondary">
+        We're performing some scheduled maintenance to improve your experience.<br>
+        Please check back shortly.
+      </p>
+      <button id="openFormBtn" class="btn btn-primary btn-lg w-100">Check Status Here</button>
+      <div id="loadingMessage" class="mt-3 text-muted d-none">
+        <div class="spinner-border text-primary me-2" role="status" style="vertical-align: middle;"></div>
+        Redirecting you to the status page, please wait a moment...
+      </div>
+      <hr>
+      <p class="text-muted small mb-0">
+        More Info Contact <strong>Suma Antara</strong> or <strong>Iyyan Anugrah.</strong>
+      </p>
+    </div>
+
+    <script>
+      document.getElementById('openFormBtn').addEventListener('click', function () {
+        // Show loading message
+        document.getElementById('loadingMessage').classList.remove('d-none');
+
+        // Simulate delay then open form
+        setTimeout(() => {
+          window.open("https://service.satuimpianbersama.com/status/live", "_blank", "noopener,noreferrer");
+          setTimeout(() => {
+            document.getElementById('loadingMessage').classList.add('d-none');
+          }, 3000);
+        }, 1000);
+      });
+    </script>
+
+    <script>
+      tsParticles.load("tsparticles", {
+        particles: {
+          number: { value: 90, density: { enable: true, area: 800 } },
+          color: { value: "#fff" },
+          shape: { type: "circle" },
+          opacity: { value: 0.5 },
+          size: { value: { min: 1, max: 3 } },
+          links: { enable: true, distance: 200, color: "#fff", opacity: 0.3, width: 1 },
+          move: { enable: true, speed: 1, outModes: "out" }
+        },
+
+        interactivity: {
+          events: {
+            onHover: { enable: true, mode: "grab" },
+            onClick: { enable: true, mode: "push" }
+          },
+          modes: {
+            grab: { distance: 280, links: { opacity: 0.5 } },
+            push: { quantity: 3 }
+          }
+        },
+
+        detectRetina: true
+      });
+    </script>
+  </body>
+
+</html>

@@ -1,53 +1,204 @@
 <!DOCTYPE html>
 <html>
+
 <head>
   <!--
     Creator: Galbatorix
+    Created for ONEderland Leave Request System
     If you need support, improvements, or bug fixes, please contact the creator.
 
-    Version: 7.17
-    Date: 2025-05-30
+    Version: 16
+    Date: September 13, 2025
   -->
   <base target="_top">
   <style>
-    body { font-family: Arial, sans-serif; background-color: #f4f4f4; margin: 0; padding: 20px; }
-    .card {
-      max-width: 600px; margin: auto; background-color: #fff;
-      border: 1px solid #ddd; border-radius: 8px;
-      padding: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f4f4f4;
+      margin: 0;
+      padding: 20px;
     }
-    .header { text-align: center; color: #2c3e50; margin-bottom: 20px; }
-    .section { margin-bottom: 15px; }
-    .label { font-weight: bold; color: #555; }
-    .footer { margin-top: 20px; font-size: 0.9em; color: #777; text-align: center; }
-    .approved { color: green; font-weight: bold; }
-    .rejected { color: red; font-weight: bold; }
+
+    .card {
+      max-width: 700px;
+      margin: auto;
+      background-color: #fff;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      padding: 20px;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    .header {
+      text-align: center;
+      color: #2c3e50;
+      margin-bottom: 20px;
+    }
+
+    .footer {
+      margin-top: 20px;
+      font-size: 0.9em;
+      color: #777;
+      text-align: center;
+    }
+
+    .approved {
+      color: green;
+      font-weight: bold;
+    }
+
+    .rejected {
+      color: red;
+      font-weight: bold;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 15px;
+    }
+
+    td {
+      padding: 10px;
+      border: 1px solid #ddd;
+      vertical-align: top;
+    }
+
+    td.label {
+      width: 30%;
+      background-color: #f9f9f9;
+      font-weight: bold;
+      color: #555;
+    }
   </style>
 </head>
+
 <body>
   <div class="card">
-    <h2 class="header">Your Leave/WFH Request Notifications</h2>
+    <h2 class="header">Leave/WFH Notifications</h2>
+
     <div class="section">
-      <p>Hi <strong><?= name ?></strong>,</p>
-      <p>Your leave/WFH request has been processed. Below are the final decisions:</p>
+      <p>Hi <strong>
+          <?= name ?>
+        </strong>,</p>
+      <p>Your Leave/WFH request has been processed. Below are the final decisions:</p>
     </div>
-    <div class="section">
-      <p><span class="label">Leave Type:</span> <?= leaveType ?></p>
-      <p><span class="label">Dates:</span> <?= startDate ?> to <?= endDate ?> (<?= totalDays ?> days)</p>
-      <p><span class="label">Reason:</span> <?= reason ?></p>
-      <p><span class="label">Final Decision:</span> <?= finalDecision ?></p>
-      <!-- <p><span class="label">Final Note:</span> <?= finalNote ?></p>  // I think this unnecessary, so I will comment this.-->
-    </div>
-    <div class="section">
-      <p><span class="label">SPV Decision:</span> <span class="<?= spvStatus == 'Approved' ? 'approved' : 'rejected' ?>"><?= spvStatus ?></span></p>
-      <p><span class="label">HR Decision:</span> <span class="<?= hrStatus == 'Approved' ? 'approved' : 'rejected' ?>"><?= hrStatus ?></span></p>
-      <? if (gmStatus) { ?>
-        <p><span class="label">GM Decision:</span> <span class="<?= gmStatus == 'Approved' ? 'approved' : 'rejected' ?>"><?= gmStatus ?></span></p>
+
+    <table>
+      <tr>
+        <td class="label">Form ID</td>
+        <td>
+          <?= refID ?>
+        </td>
+      </tr>
+      <tr>
+        <td class="label">Leave Type</td>
+        <td>
+          <?= leaveType ?>
+        </td>
+      </tr>
+      <tr>
+        <td class="label">Dates</td>
+        <td>
+          <?= startDate ?> ->
+          <?= endDate ?> (
+          <?= (totalDays == 0.5 || totalDays == "0.5") ? totalDays + " days (Half-Day)" : totalDays + " days" ?>)
+        </td>
+      </tr>
+      <tr>
+        <td class="label">Reason</td>
+        <td>
+          <?= reason ?>
+        </td>
+      </tr>
+      <? if (attachmentUrl) { ?>
+      <tr>
+        <td class="label">Attachment</td>
+        <td>
+          <a href="<?= attachmentUrl ?>" target="_blank">View Document</a>
+        </td>
+      </tr>
       <? } ?>
-    </div>
+      <tr>
+        <td class="label">Final Decision</td>
+        <td><span class="<?= finalDecision == 'Approved' ? 'approved' : 'rejected' ?>">
+            <?= finalDecision ?>
+          </span></td>
+      </tr>
+      <tr>
+        <td class="label">Final Note</td>
+        <td>
+          <?= finalNote ?>
+        </td>
+      </tr>
+      <? if (updatedBalance) { ?>
+      <tr>
+        <td class="label">Balance Updates</td>
+        <td>
+          <? if (updatedBalance.annual) { ?>
+          <div>Annual Leave: <strong>
+              <?= updatedBalance.annual ?>
+            </strong></div>
+          <? } ?>
+          <? if (updatedBalance.sick) { ?>
+          <div>Sick Leave: <strong>
+              <?= updatedBalance.sick ?>
+            </strong></div>
+          <? } ?>
+          <? if (updatedBalance.bereavement) { ?>
+          <div>Bereavement: <strong>
+              <?= updatedBalance.bereavement ?>
+            </strong></div>
+          <? } ?>
+          <? if (updatedBalance.marriage) { ?>
+          <div>Marriage: <strong>
+              <?= updatedBalance.marriage ?>
+            </strong></div>
+          <? } ?>
+          <? if (updatedBalance.maternity) { ?>
+          <div>Maternity: <strong>
+              <?= updatedBalance.maternity ?>
+            </strong></div>
+          <? } ?>
+          <? if (updatedBalance.unpaid) { ?>
+          <div>Unpaid Leave: <strong>
+              <?= updatedBalance.unpaid ?>
+            </strong></div>
+          <? } ?>
+        </td>
+      </tr>
+      <? } ?>
+    </table>
+
+    <!-- Comment if not needed later -->
+    <table>
+      <tr>
+        <td class="label">SPV Note</td>
+        <td><span class="<?= spvStatus == 'Approved' ? 'approved' : 'rejected' ?>">
+            <?= spvStatus ?>
+          </span></td>
+      </tr>
+      <tr>
+        <td class="label">HR Note</td>
+        <td><span class="<?= hrStatus == 'Approved' ? 'approved' : 'rejected' ?>">
+            <?= hrStatus ?>
+          </span></td>
+      </tr>
+      <? if (gmStatus) { ?>
+      <tr>
+        <td class="label">GM Note</td>
+        <td><span class="<?= gmStatus == 'Approved' ? 'approved' : 'rejected' ?>">
+            <?= gmStatus ?>
+          </span></td>
+      </tr>
+      <? } ?>
+    </table>
+
+
     <div class="footer">
-      <p>Thank you for using the Approval Leave System.</p>
+      <p>Thank you for using the ONEderland Leave System.</p>
     </div>
   </div>
 </body>
+
 </html>

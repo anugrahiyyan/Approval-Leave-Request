@@ -1,0 +1,46 @@
+# .htaccess
+
+# Set default index file
+DirectoryIndex index.html
+
+<IfModule mod_headers.c>
+  # Security Headers
+
+  # Prevent MIME-type sniffing
+  Header set X-Content-Type-Options "nosniff"
+
+  # Prevent clickjacking
+  Header always set X-Frame-Options "DENY"
+
+  # Enable XSS Protection
+  Header set X-XSS-Protection "1; mode=block"
+
+  # Enforce HTTPS (only works if behind HTTPS reverse proxy)
+  Header always set Strict-Transport-Security "max-age=63072000; includeSubDomains; preload"
+
+  # Content Security Policy (adjust as needed)
+  Header set Content-Security-Policy "default-src 'self'; script-src 'self' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; img-src 'self' data:; media-src 'self'; object-src 'none'; base-uri 'self';"
+
+  # Referrer Policy
+  Header set Referrer-Policy "no-referrer-when-downgrade"
+
+  # Permissions Policy (disable unwanted browser features)
+  Header set Permissions-Policy "geolocation=(), microphone=(), camera=(), fullscreen=(self)"
+</IfModule>
+
+# Redirect all to maintenance.html if down.flag exists,
+RewriteEngine On
+
+# Only redirect if down.flag exists
+RewriteCond %{DOCUMENT_ROOT}/down/down.flag -f
+
+# Exclude maintenance page
+RewriteCond %{REQUEST_URI} !^/down/maintenance\.html$ [NC]
+RewriteCond %{REQUEST_URI} !^/privacy\.html$ [NC]
+RewriteCond %{REQUEST_URI} !^/terms\.html$ [NC]
+
+# Exclude static files (css|js|png|jpg|gif|ico|svg|mp4|webm|woff2 etc.)
+RewriteCond %{REQUEST_URI} !\.(css|js|gif|jpg|jpeg|png|svg|ico|woff|woff2|ttf|eot|mp4|webm)$ [NC]
+
+# Redirect everything else
+RewriteRule ^.*$ /down/maintenance.html [R=302,L]
