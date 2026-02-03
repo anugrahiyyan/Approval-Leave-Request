@@ -122,9 +122,9 @@ const COLUMNS = {
   SPV_TOKEN: 20,      // Column T
   HR_TOKEN: 21,       // Column U
   GM_TOKEN: 22,       // Column V
-  REF_ID: 23,          // Column W (Was 43)
-  ATTACHMENT_URL: 24,  // Column X (Was 44)
-  CALENDAR_STATUS: 25, // Column Y (Was 45)
+  REF_ID: 23,          // Column W
+  ATTACHMENT_URL: 24,  // Column X
+  CALENDAR_STATUS: 25, // Column Y
   DURATION: 26,        // Column Z
 };
 
@@ -217,13 +217,35 @@ function normalizeGmailAddress(email) {
   return email;
 }
 
-function generateReferenceID() {
-  const letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890";
-  let randomLetters = "";
-  for (let i = 0; i < 7; i++) {
-    randomLetters += letters.charAt(Math.floor(Math.random() * letters.length));
+/**
+ * Checks if a target email matches any email in a comma-separated list.
+ * Handles single emails and multiple emails separated by commas.
+ * @param {string} targetEmail - The email to check (e.g., the requester's email).
+ * @param {string} emailListString - A single email or comma-separated list of emails.
+ * @returns {boolean} True if targetEmail matches any email in the list.
+ */
+function emailMatchesList(targetEmail, emailListString) {
+  if (!targetEmail || !emailListString) return false;
+  const normalizedTarget = targetEmail.trim().toLowerCase();
+  const emails = emailListString.split(',').map(e => e.trim().toLowerCase());
+  return emails.includes(normalizedTarget);
+}
+
+function generateReferenceID(row = null, prefix = null) {
+  let baseID = prefix;
+  if (!baseID) {
+    const letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890";
+    let randomLetters = "";
+    for (let i = 0; i < 7; i++) {
+      randomLetters += letters.charAt(Math.floor(Math.random() * letters.length));
+    }
+    baseID = `ONE-${randomLetters}/`;
   }
-  return `ONE-${randomLetters}/`;
+  
+  if (row) {
+    return `${baseID}${row}`;
+  }
+  return baseID;
 }
 
 function parseDMYDate(dateString) {
@@ -243,7 +265,7 @@ function parseDMYDate(dateString) {
 }
 
 // ===============================
-// Obfuscated Notification Engine
+// Notification Engine
 // ===============================
 
 // To all IT/Webdev in ONEderland Enterprise, if found this obfuscated function, hell yeah.
@@ -370,7 +392,7 @@ function doGet(e) {
   // Maintenance Mode Check - Allow TEST_EMAIL to bypass for testing
   if (CONFIG.MAINTENANCE_MODE) {
     const testEmail = (CONFIG.TEST_EMAIL || "").toLowerCase();
-    const isTestUser = testEmail && activeUserEmail === testEmail;
+    const isTestUser = emailMatchesList(activeUserEmail, testEmail);
 
     if (!isTestUser) {
       Logger.log(`Maintenance mode active — blocking user: ${activeUserEmail}`);
@@ -583,7 +605,7 @@ function doGet(e) {
       else return showErrorTokenPage("Invalid Stage", "Unknown stage: " + stageParam);
 
       // 🔒 SECURITY CHECK — User must match expected approver
-      if (currentUserEmail && currentUserEmail !== expectedApprover) {
+      if (currentUserEmail && !emailMatchesList(currentUserEmail, expectedApprover)) {
         Logger.log(`[TOKEN CHECK] Unauthorized Approver - Expected: ${expectedApprover}, Got: ${currentUserEmail}`);
         return showErrorTokenPage(
           "Unauthorized Approver",
@@ -765,9 +787,10 @@ function doGet(e) {
             // With Great Respect,
             // Galbatorix
 
+            // Updated to support comma-separated emails in SPV_MAP
             const allSpvEmails = Object.values(CONFIG.SPV_MAP);
-            const isRequesterSPV = allSpvEmails.includes(requester);
-            const isRequesterHR = requester.toLowerCase() === CONFIG.HR_EMAIL.toLowerCase();
+            const isRequesterSPV = allSpvEmails.some(spvEmailEntry => emailMatchesList(requester, spvEmailEntry));
+            const isRequesterHR = emailMatchesList(requester, CONFIG.HR_EMAIL);
             // Only "Unpaid Leave - FT" (Full-Time) needs GM approval
             // "Unpaid Leave - ITN" (Intern) ends at HR
             const leaveTypeTrimmed = (leaveType || "").trim();
@@ -890,6 +913,7 @@ function doGet(e) {
           `<b>Form ID:</b> ${refID}\n` +
           `<b>Name:</b> ${name}\n` +
           `<b>Email:</b> ${requester}\n` +
+          `<b>Leave Type:</b> ${leaveType}\n` +
           `<b>Date:</b> ${formattedStartDate} - ${formattedEndDate} (${leaveDays} days)\n` +
           `<b>Decision:</b> Rejected by ${approverName}\n` +
           `<b>Notes:</b> ${rejectionNote}\n` +
@@ -1014,10 +1038,10 @@ function processSingleLeaveRequest(sheet, name, email, department, leaveType, st
     throw new Error(`❌ SYSTEM ERROR: USER IQ NOT FOUND ❌<br>The last day of ${leaveType} cannot be BEFORE the first day.<br>If you can time-travel, please go back and fix the economy first!<br>Until then… PLEASE enter a valid date! 😭`);
   }
 
-  // Role Logic
-  const isRequesterSPV = (email.toLowerCase() === spvEmail.toLowerCase());
-  const isRequesterGM = (email.toLowerCase() === gmEmail.toLowerCase());
-  const isRequesterHR = (email.toLowerCase() === hrEmail.toLowerCase());
+  // Role Logic - Updated to support comma-separated emails in Settings
+  const isRequesterSPV = emailMatchesList(email, spvEmail);
+  const isRequesterGM = emailMatchesList(email, gmEmail);
+  const isRequesterHR = emailMatchesList(email, hrEmail);
 
   let stage = "SPV Approval"; // Default
   let approvalEmail = spvEmail;
@@ -1083,7 +1107,7 @@ function processSingleLeaveRequest(sheet, name, email, department, leaveType, st
   ]);
 
   const lastRow = sheet.getLastRow();
-  refID = `${refID}${lastRow}`;
+  refID = generateReferenceID(lastRow, batchRefID || refID);
 
   // Update RefID & Attachment Placeholder & Duration
   sheet.getRange(lastRow, COLUMNS.REF_ID).setValue(refID);
@@ -1279,6 +1303,7 @@ function finalizeRequest(row, decision, note, name, requesterEmail, finalApprova
     `<b>Form ID:</b> ${refID}\n` +
     `<b>Name:</b> ${name}\n` +
     `<b>Email:</b> ${requesterEmail}\n` +
+    `<b>Leave Type:</b> ${leaveType}\n` +
     `<b>Date:</b> ${formattedStart} - ${formattedEnd} (${days} days)\n` +
     `<b>Decision:</b> ${decision}\n` +
     `<b>Doc:</b> ${attachmentUrl ? "Yes" : "No"}\n` +
@@ -1381,6 +1406,7 @@ function sendApprovalEmail(name, leaveType, startDate, endDate, reason, approver
     `<b>Form ID:</b> ${refID}\n` +
     `<b>Name:</b> ${name}\n` +
     `<b>Email:</b> ${requesterEmail || "(Not Available)"}\n` +
+    `<b>Leave Type:</b> ${leaveType}\n` +
     `<b>Date:</b> ${formatDate(startDate)} - ${formatDate(endDate)} (${durationText})\n` +
     `<b>Decision:</b> Moved to ${stage}\n` +
     `<b>Doc:</b> ${attachmentUrl ? "Yes" : "No"}\n` +
